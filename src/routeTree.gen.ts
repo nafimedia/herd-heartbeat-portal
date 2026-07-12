@@ -9,8 +9,38 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TernakRouteImport } from './routes/ternak'
+import { Route as ProduksiRouteImport } from './routes/produksi'
+import { Route as PakanRouteImport } from './routes/pakan'
+import { Route as LaporanRouteImport } from './routes/laporan'
+import { Route as KesehatanRouteImport } from './routes/kesehatan'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TernakRoute = TernakRouteImport.update({
+  id: '/ternak',
+  path: '/ternak',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProduksiRoute = ProduksiRouteImport.update({
+  id: '/produksi',
+  path: '/produksi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PakanRoute = PakanRouteImport.update({
+  id: '/pakan',
+  path: '/pakan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LaporanRoute = LaporanRouteImport.update({
+  id: '/laporan',
+  path: '/laporan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KesehatanRoute = KesehatanRouteImport.update({
+  id: '/kesehatan',
+  path: '/kesehatan',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +49,96 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/kesehatan': typeof KesehatanRoute
+  '/laporan': typeof LaporanRoute
+  '/pakan': typeof PakanRoute
+  '/produksi': typeof ProduksiRoute
+  '/ternak': typeof TernakRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/kesehatan': typeof KesehatanRoute
+  '/laporan': typeof LaporanRoute
+  '/pakan': typeof PakanRoute
+  '/produksi': typeof ProduksiRoute
+  '/ternak': typeof TernakRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/kesehatan': typeof KesehatanRoute
+  '/laporan': typeof LaporanRoute
+  '/pakan': typeof PakanRoute
+  '/produksi': typeof ProduksiRoute
+  '/ternak': typeof TernakRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/kesehatan'
+    | '/laporan'
+    | '/pakan'
+    | '/produksi'
+    | '/ternak'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/kesehatan' | '/laporan' | '/pakan' | '/produksi' | '/ternak'
+  id:
+    | '__root__'
+    | '/'
+    | '/kesehatan'
+    | '/laporan'
+    | '/pakan'
+    | '/produksi'
+    | '/ternak'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  KesehatanRoute: typeof KesehatanRoute
+  LaporanRoute: typeof LaporanRoute
+  PakanRoute: typeof PakanRoute
+  ProduksiRoute: typeof ProduksiRoute
+  TernakRoute: typeof TernakRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/ternak': {
+      id: '/ternak'
+      path: '/ternak'
+      fullPath: '/ternak'
+      preLoaderRoute: typeof TernakRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/produksi': {
+      id: '/produksi'
+      path: '/produksi'
+      fullPath: '/produksi'
+      preLoaderRoute: typeof ProduksiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pakan': {
+      id: '/pakan'
+      path: '/pakan'
+      fullPath: '/pakan'
+      preLoaderRoute: typeof PakanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/laporan': {
+      id: '/laporan'
+      path: '/laporan'
+      fullPath: '/laporan'
+      preLoaderRoute: typeof LaporanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kesehatan': {
+      id: '/kesehatan'
+      path: '/kesehatan'
+      fullPath: '/kesehatan'
+      preLoaderRoute: typeof KesehatanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +151,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  KesehatanRoute: KesehatanRoute,
+  LaporanRoute: LaporanRoute,
+  PakanRoute: PakanRoute,
+  ProduksiRoute: ProduksiRoute,
+  TernakRoute: TernakRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
