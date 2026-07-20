@@ -14,6 +14,7 @@ import { Route as ProduksiRouteImport } from './routes/produksi'
 import { Route as PakanRouteImport } from './routes/pakan'
 import { Route as LaporanRouteImport } from './routes/laporan'
 import { Route as KesehatanRouteImport } from './routes/kesehatan'
+import { Route as KartuRouteImport } from './routes/kartu'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TernakRoute = TernakRouteImport.update({
@@ -41,6 +42,11 @@ const KesehatanRoute = KesehatanRouteImport.update({
   path: '/kesehatan',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KartuRoute = KartuRouteImport.update({
+  id: '/kartu',
+  path: '/kartu',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -49,6 +55,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/kartu': typeof KartuRoute
   '/kesehatan': typeof KesehatanRoute
   '/laporan': typeof LaporanRoute
   '/pakan': typeof PakanRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/kartu': typeof KartuRoute
   '/kesehatan': typeof KesehatanRoute
   '/laporan': typeof LaporanRoute
   '/pakan': typeof PakanRoute
@@ -66,6 +74,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/kartu': typeof KartuRoute
   '/kesehatan': typeof KesehatanRoute
   '/laporan': typeof LaporanRoute
   '/pakan': typeof PakanRoute
@@ -76,16 +85,25 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/kartu'
     | '/kesehatan'
     | '/laporan'
     | '/pakan'
     | '/produksi'
     | '/ternak'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/kesehatan' | '/laporan' | '/pakan' | '/produksi' | '/ternak'
+  to:
+    | '/'
+    | '/kartu'
+    | '/kesehatan'
+    | '/laporan'
+    | '/pakan'
+    | '/produksi'
+    | '/ternak'
   id:
     | '__root__'
     | '/'
+    | '/kartu'
     | '/kesehatan'
     | '/laporan'
     | '/pakan'
@@ -95,6 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  KartuRoute: typeof KartuRoute
   KesehatanRoute: typeof KesehatanRoute
   LaporanRoute: typeof LaporanRoute
   PakanRoute: typeof PakanRoute
@@ -139,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KesehatanRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kartu': {
+      id: '/kartu'
+      path: '/kartu'
+      fullPath: '/kartu'
+      preLoaderRoute: typeof KartuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -151,6 +177,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  KartuRoute: KartuRoute,
   KesehatanRoute: KesehatanRoute,
   LaporanRoute: LaporanRoute,
   PakanRoute: PakanRoute,
