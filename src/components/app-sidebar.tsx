@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Beef, HeartPulse, Milk, Wheat, FileBarChart, Sprout } from "lucide-react";
+import { LayoutDashboard, Beef, HeartPulse, Milk, Wheat, FileBarChart, Sprout, IdCard } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -16,6 +16,7 @@ import {
 const menu = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Data Ternak", url: "/ternak", icon: Beef },
+  { title: "Kartu Kesehatan", url: "/kartu", icon: IdCard },
   { title: "Kesehatan", url: "/kesehatan", icon: HeartPulse },
   { title: "Produksi", url: "/produksi", icon: Milk },
   { title: "Pakan & Stok", url: "/pakan", icon: Wheat },
