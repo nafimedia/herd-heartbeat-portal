@@ -20,12 +20,20 @@ import { StatCard } from "@/components/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "@tanstack/react-router";
 import {
   aktivitasTerbaru,
   distribusiStatus,
   populasiBulanan,
   produksiSusu,
 } from "@/lib/mock-data";
+import { peringatanDini } from "@/lib/kartu-data";
+
+const levelStyle: Record<string, string> = {
+  kritis: "border-destructive/40 bg-destructive/10 text-destructive",
+  peringatan: "border-warning/40 bg-warning/15 text-warning-foreground",
+  info: "border-primary/30 bg-primary/10 text-primary",
+};
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -74,6 +82,44 @@ function DashboardPage() {
         <StatCard label="Ternak Sehat" value="168" hint="81% dari populasi" delta={1.4} icon={HeartPulse} tone="success" />
         <StatCard label="Stok Pakan Kritis" value="2" hint="Item di bawah minimum" delta={-12} icon={TriangleAlert} tone="warning" />
       </div>
+
+      <Card className="mt-6 border-destructive/20">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+              <TriangleAlert className="h-5 w-5" />
+            </div>
+            <div>
+              <CardTitle>Peringatan Dini</CardTitle>
+              <p className="mt-0.5 text-sm text-muted-foreground">Kondisi ternak yang perlu perhatian segera</p>
+            </div>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/kartu">Lihat Kartu</Link>
+          </Button>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          {peringatanDini.map((p) => (
+            <div
+              key={p.id}
+              className={`flex items-start gap-3 rounded-lg border p-3 ${levelStyle[p.level]}`}
+            >
+              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-xs font-semibold">{p.idKambing}</span>
+                  <Badge variant="outline" className="border-current bg-background/50 text-[10px] uppercase">
+                    {p.level}
+                  </Badge>
+                </div>
+                <p className="mt-1 text-sm leading-snug">{p.pesan}</p>
+                <p className="mt-1 text-xs opacity-70">{p.waktu}</p>
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">

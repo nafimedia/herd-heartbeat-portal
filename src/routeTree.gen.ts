@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TernakRouteImport } from './routes/ternak'
 import { Route as ProduksiRouteImport } from './routes/produksi'
+import { Route as PosyanduRouteImport } from './routes/posyandu'
 import { Route as PakanRouteImport } from './routes/pakan'
 import { Route as LaporanRouteImport } from './routes/laporan'
 import { Route as KesehatanRouteImport } from './routes/kesehatan'
@@ -25,6 +26,11 @@ const TernakRoute = TernakRouteImport.update({
 const ProduksiRoute = ProduksiRouteImport.update({
   id: '/produksi',
   path: '/produksi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PosyanduRoute = PosyanduRouteImport.update({
+  id: '/posyandu',
+  path: '/posyandu',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PakanRoute = PakanRouteImport.update({
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/kesehatan': typeof KesehatanRoute
   '/laporan': typeof LaporanRoute
   '/pakan': typeof PakanRoute
+  '/posyandu': typeof PosyanduRoute
   '/produksi': typeof ProduksiRoute
   '/ternak': typeof TernakRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/kesehatan': typeof KesehatanRoute
   '/laporan': typeof LaporanRoute
   '/pakan': typeof PakanRoute
+  '/posyandu': typeof PosyanduRoute
   '/produksi': typeof ProduksiRoute
   '/ternak': typeof TernakRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/kesehatan': typeof KesehatanRoute
   '/laporan': typeof LaporanRoute
   '/pakan': typeof PakanRoute
+  '/posyandu': typeof PosyanduRoute
   '/produksi': typeof ProduksiRoute
   '/ternak': typeof TernakRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/kesehatan'
     | '/laporan'
     | '/pakan'
+    | '/posyandu'
     | '/produksi'
     | '/ternak'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/kesehatan'
     | '/laporan'
     | '/pakan'
+    | '/posyandu'
     | '/produksi'
     | '/ternak'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/kesehatan'
     | '/laporan'
     | '/pakan'
+    | '/posyandu'
     | '/produksi'
     | '/ternak'
   fileRoutesById: FileRoutesById
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   KesehatanRoute: typeof KesehatanRoute
   LaporanRoute: typeof LaporanRoute
   PakanRoute: typeof PakanRoute
+  PosyanduRoute: typeof PosyanduRoute
   ProduksiRoute: typeof ProduksiRoute
   TernakRoute: typeof TernakRoute
 }
@@ -135,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/produksi'
       fullPath: '/produksi'
       preLoaderRoute: typeof ProduksiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/posyandu': {
+      id: '/posyandu'
+      path: '/posyandu'
+      fullPath: '/posyandu'
+      preLoaderRoute: typeof PosyanduRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pakan': {
@@ -181,19 +201,10 @@ const rootRouteChildren: RootRouteChildren = {
   KesehatanRoute: KesehatanRoute,
   LaporanRoute: LaporanRoute,
   PakanRoute: PakanRoute,
+  PosyanduRoute: PosyanduRoute,
   ProduksiRoute: ProduksiRoute,
   TernakRoute: TernakRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
