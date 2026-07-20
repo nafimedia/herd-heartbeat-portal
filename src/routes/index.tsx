@@ -40,8 +40,8 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "Dashboard — TernakPro" },
       { name: "description", content: "Ringkasan populasi ternak, kesehatan, produksi susu dan stok pakan dalam satu dashboard." },
-      { property: "og:title", content: "TernakPro — Sistem Pendataan Ternak" },
-      { property: "og:description", content: "Kelola populasi, kesehatan, produksi, dan stok pakan ternak dengan mudah." },
+      { property: "og:title", content: "Dashboard — TernakPro" },
+      { property: "og:description", content: "Ringkasan populasi ternak, kesehatan, produksi susu dan stok pakan dalam satu dashboard." },
     ],
   }),
   component: DashboardPage,
