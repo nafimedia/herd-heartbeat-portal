@@ -200,6 +200,35 @@ function KartuDetailDialog({ kartu }: { kartu: KartuKesehatanKambing }) {
         <Field label="Lebar Dada" value={`${kartu.lebarDada} cm`} />
       </Section>
 
+      <div className="mt-4">
+        <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+          <TrendingUp className="h-4 w-4 text-primary" /> Tren Bobot 6 Bulan
+        </div>
+        <div className="rounded-lg border bg-card p-3">
+          <ResponsiveContainer width="100%" height={180}>
+            <AreaChart data={kartu.bobotHistory}>
+              <defs>
+                <linearGradient id="gBobot" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.4} />
+                  <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+              <XAxis dataKey="bulan" stroke="var(--color-muted-foreground)" fontSize={12} />
+              <YAxis stroke="var(--color-muted-foreground)" fontSize={12} unit=" kg" />
+              <Tooltip
+                contentStyle={{
+                  background: "var(--color-card)",
+                  border: "1px solid var(--color-border)",
+                  borderRadius: "var(--radius)",
+                }}
+              />
+              <Area type="monotone" dataKey="bobot" stroke="var(--color-primary)" fill="url(#gBobot)" strokeWidth={2} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
       <Section title="D. Status Kesehatan">
         <Field label="Kondisi" value={kartu.kondisi} />
         <Field label="Nafsu Makan" value={kartu.nafsuMakan} />
@@ -307,6 +336,14 @@ function KartuFormDialog({ onClose }: { onClose: () => void }) {
           <Label className="text-xs">Ciri-ciri</Label>
           <Textarea className="mt-1" placeholder="Warna bulu, tanda khusus..." rows={2} />
         </div>
+        <div className="sm:col-span-2">
+          <Label className="text-xs">Foto Kambing</Label>
+          <label className="mt-1 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/30 py-6 text-sm text-muted-foreground hover:border-primary/50 hover:bg-primary/5">
+            <Camera className="h-6 w-6" />
+            <span>Klik untuk unggah foto (JPG/PNG)</span>
+            <input type="file" accept="image/*" className="hidden" />
+          </label>
+        </div>
       </FormSection>
 
       <FormSection title="B. Identitas Pemilik">
@@ -337,10 +374,14 @@ function KartuFormDialog({ onClose }: { onClose: () => void }) {
         </div>
         <div>
           <Label className="text-xs">Nafsu Makan</Label>
-          <RadioGroup defaultValue="Baik" className="mt-2 flex gap-4">
+          <RadioGroup defaultValue="Baik" className="mt-2 flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
               <RadioGroupItem value="Baik" id="nb" />
               <Label htmlFor="nb" className="font-normal">Baik</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <RadioGroupItem value="Menurun" id="nm" />
+              <Label htmlFor="nm" className="font-normal">Menurun</Label>
             </div>
             <div className="flex items-center gap-2">
               <RadioGroupItem value="Tidak" id="nt" />

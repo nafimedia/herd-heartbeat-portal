@@ -20,12 +20,20 @@ import { StatCard } from "@/components/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "@tanstack/react-router";
 import {
   aktivitasTerbaru,
   distribusiStatus,
   populasiBulanan,
   produksiSusu,
 } from "@/lib/mock-data";
+import { peringatanDini } from "@/lib/kartu-data";
+
+const levelStyle: Record<string, string> = {
+  kritis: "border-destructive/40 bg-destructive/10 text-destructive",
+  peringatan: "border-warning/40 bg-warning/15 text-warning-foreground",
+  info: "border-primary/30 bg-primary/10 text-primary",
+};
 
 export const Route = createFileRoute("/")({
   head: () => ({
