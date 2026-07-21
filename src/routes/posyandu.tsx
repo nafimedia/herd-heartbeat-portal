@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CalendarDays, MapPin, Users, ClipboardCheck, ArrowRight } from "lucide-react";
-import { DashboardShell } from "@/components/dashboard-shell";
+import { DashboardShell } from "@/features/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

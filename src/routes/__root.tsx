@@ -6,11 +6,14 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  redirect,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { Toaster } from "@/components/ui/sonner";
+import { getAuthSession } from "@/lib/auth";
 
 function NotFoundComponent() {
   return (
@@ -72,7 +75,25 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+function hasActiveSession() {
+  return Boolean(getAuthSession()?.token);
+}
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  beforeLoad: ({ location }) => {
+    const isPublicRoute = location.pathname === "/" || location.pathname === "/login";
+
+    if (isPublicRoute) {
+      if (location.pathname === "/login" && hasActiveSession()) {
+        throw redirect({ to: "/dashboard" });
+      }
+      return;
+    }
+
+    if (!hasActiveSession()) {
+      throw redirect({ to: "/login" });
+    }
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -126,6 +147,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <Toaster position="top-right" richColors closeButton />
     </QueryClientProvider>
   );
 }

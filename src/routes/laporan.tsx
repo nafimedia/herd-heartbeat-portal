@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { FileBarChart, Download, FileText, TrendingUp, DollarSign } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { DashboardShell } from "@/components/dashboard-shell";
-import { StatCard } from "@/components/stat-card";
+import { DashboardShell, StatCard } from "@/features/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { produksiBulanan } from "@/lib/mock-data";

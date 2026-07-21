@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CalendarPlus, HeartPulse, Syringe, Stethoscope, ShieldAlert } from "lucide-react";
-import { DashboardShell } from "@/components/dashboard-shell";
-import { StatCard } from "@/components/stat-card";
+import { DashboardShell, StatCard } from "@/features/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

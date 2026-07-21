@@ -1,0 +1,135 @@
+import { getPool, ensureSqlSchema } from './sql.js';
+import { initializeDatabase } from './db.js';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// Load .env from project root into process.env if not already set
+function loadEnvToProcess() {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const rootDir = path.resolve(__dirname, '..');
+  const envPath = path.join(rootDir, '.env');
+  if (!existsSync(envPath)) return;
+  const content = readFileSync(envPath, 'utf8');
+  content
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .forEach((line) => {
+      const idx = line.indexOf('=');
+      if (idx === -1) return;
+      const key = line.slice(0, idx).trim();
+      const val = line.slice(idx + 1).trim();
+      if (!process.env[key]) process.env[key] = val;
+    });
+}
+
+loadEnvToProcess();
+
+function isMysql() {
+  const url = process.env.DATABASE_URL || '';
+  return process.env.DB_MODE === 'mysql' || url.startsWith('mysql://');
+}
+
+async function insertAll(client, query, params) {
+  await client.query(query, params);
+}
+
+async function migrate() {
+  console.log('Starting migration: JSON -> SQL');
+  await ensureSqlSchema();
+  const snapshot = await initializeDatabase();
+
+  const client = await getPool().connect();
+  try {
+    const mysqlMode = isMysql();
+
+    // animals
+    for (const a of snapshot.animals || []) {
+      if (mysqlMode) {
+        await client.query(
+          `INSERT INTO animals (id, tag, name, jenis, ras, jenis_kelamin, umur, berat, kandang, status, tanggal_masuk)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+           ON DUPLICATE KEY UPDATE id=id;`,
+          [a.id, a.tag, a.name, a.jenis, a.ras, a.jenisKelamin || a.jenis_kelamin || '', a.umur || 0, a.berat || 0, a.kandang || '', a.status || '', a.tanggalMasuk || a.tanggal_masuk || '']
+        );
+      } else {
+        await client.query(
+          `INSERT INTO animals (id, tag, name, jenis, ras, jenis_kelamin, umur, berat, kandang, status, tanggal_masuk)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+           ON CONFLICT (id) DO NOTHING;`,
+          [a.id, a.tag, a.name, a.jenis, a.ras, a.jenisKelamin || a.jenis_kelamin || '', a.umur || 0, a.berat || 0, a.kandang || '', a.status || '', a.tanggalMasuk || a.tanggal_masuk || '']
+        );
+      }
+    }
+
+    // health checks
+    for (const h of snapshot.healthChecks || []) {
+      if (mysqlMode) {
+        await client.query(
+          `INSERT INTO health_checks (id, tanggal, tag, tindakan, petugas, status)
+           VALUES ($1,$2,$3,$4,$5,$6)
+           ON DUPLICATE KEY UPDATE id=id;`,
+          [h.id, h.tanggal, h.tag, h.tindakan, h.petugas, h.status]
+        );
+      } else {
+        await client.query(
+          `INSERT INTO health_checks (id, tanggal, tag, tindakan, petugas, status)
+           VALUES ($1,$2,$3,$4,$5,$6)
+           ON CONFLICT (id) DO NOTHING;`,
+          [h.id, h.tanggal, h.tag, h.tindakan, h.petugas, h.status]
+        );
+      }
+    }
+
+    // feed stock
+    for (const f of snapshot.feedStock || []) {
+      if (mysqlMode) {
+        await client.query(
+          `INSERT INTO feed_stock (id, nama, kategori, stok, satuan, minimum, supplier)
+           VALUES ($1,$2,$3,$4,$5,$6,$7)
+           ON DUPLICATE KEY UPDATE id=id;`,
+          [f.id, f.nama, f.kategori, f.stok || 0, f.satuan || 'kg', f.minimum || 0, f.supplier || '']
+        );
+      } else {
+        await client.query(
+          `INSERT INTO feed_stock (id, nama, kategori, stok, satuan, minimum, supplier)
+           VALUES ($1,$2,$3,$4,$5,$6,$7)
+           ON CONFLICT (id) DO NOTHING;`,
+          [f.id, f.nama, f.kategori, f.stok || 0, f.satuan || 'kg', f.minimum || 0, f.supplier || '']
+        );
+      }
+    }
+
+    // production
+    for (const p of snapshot.production || []) {
+      if (mysqlMode) {
+        await client.query(
+          `INSERT INTO production (id, tanggal, susu, daging, telur, catatan)
+           VALUES ($1,$2,$3,$4,$5,$6)
+           ON DUPLICATE KEY UPDATE id=id;`,
+          [p.id, p.tanggal, p.susu || 0, p.daging || 0, p.telur || 0, p.catatan || '']
+        );
+      } else {
+        await client.query(
+          `INSERT INTO production (id, tanggal, susu, daging, telur, catatan)
+           VALUES ($1,$2,$3,$4,$5,$6)
+           ON CONFLICT (id) DO NOTHING;`,
+          [p.id, p.tanggal, p.susu || 0, p.daging || 0, p.telur || 0, p.catatan || '']
+        );
+      }
+    }
+
+    console.log('Migration finished successfully.');
+  } catch (err) {
+    console.error('Migration failed:', err);
+    process.exitCode = 1;
+  } finally {
+    client.release();
+  }
+}
+
+if (import.meta.url === `file://${process.argv[1]}` || process.argv[1].endsWith('migrate-to-sql.js')) {
+  migrate();
+}
+
+export default migrate;
