@@ -2,8 +2,9 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LoginPage } from "../src/routes/login";
 import { TernakPage } from "../src/routes/ternak";
+import { AppSidebar } from "../src/components/app-sidebar";
 import { createAnimal, deleteAnimal, getAnimals, updateAnimal } from "../src/lib/api";
-import { getAuthHeaders, getAuthSession, saveAuthSession } from "../src/lib/auth";
+import { clearAuthSession, getAuthHeaders, getAuthSession, saveAuthSession } from "../src/lib/auth";
 import { toast } from "sonner";
 
 const navigate = vi.fn();
@@ -20,6 +21,22 @@ vi.mock("sonner", () => ({
     success: vi.fn(),
     error: vi.fn(),
   },
+}));
+
+vi.mock("@/components/ui/sidebar", () => ({
+  Sidebar: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SidebarContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SidebarGroup: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SidebarGroupContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SidebarGroupLabel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SidebarHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SidebarMenu: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SidebarMenuButton: ({ children, asChild, ...props }: { children: React.ReactNode; asChild?: boolean }) => (asChild ? <div {...props}>{children}</div> : <button {...props}>{children}</button>),
+  SidebarMenuItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SidebarFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SidebarTrigger: (props: Record<string, unknown>) => <button {...props}>Toggle</button>,
+  SidebarInset: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SidebarProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 vi.mock("../src/lib/api", () => ({
@@ -110,6 +127,20 @@ describe("LoginPage", () => {
 
     expect(getAuthSession()).toEqual(session);
     expect(getAuthHeaders()).toEqual({ Authorization: "Bearer abc123" });
+  });
+});
+
+describe("AppSidebar", () => {
+  it("clears the session and redirects to login on logout", () => {
+    saveAuthSession({ token: "abc123", user: { id: "1", email: "admin@farm.local", role: "admin" } });
+
+    render(<AppSidebar />);
+    fireEvent.click(screen.getByRole("button", { name: /keluar/i }));
+
+    expect(clearAuthSession).toBeDefined();
+    expect(window.sessionStorage.getItem("farm_session")).toBeNull();
+    expect(window.localStorage.getItem("farm_session")).toBeNull();
+    expect(navigate).toHaveBeenCalledWith({ to: "/login" });
   });
 });
 
