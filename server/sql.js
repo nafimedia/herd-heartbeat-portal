@@ -36,9 +36,9 @@ export function getPool() {
           async query(q, params = []) {
             // translate $1..$n -> ? for mysql
             let translated = q.replace(/\$\d+/g, '?');
-            const isReturning = /RETURNING \*/i.test(translated);
+            const isReturning = /RETURNING\s+\*/i.test(translated);
             if (isReturning) {
-              translated = translated.replace(/\s+RETURNING \*/i, '');
+              translated = translated.replace(/\s*RETURNING\s+\*/gi, '').trim();
             }
             const [result] = await conn.execute(translated, params);
             let rows = Array.isArray(result) ? result : [];
