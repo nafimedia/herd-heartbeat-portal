@@ -4,13 +4,10 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
-  HeadContent,
-  Scripts,
   redirect,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect } from "react";
 
-import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { getAuthSession } from "@/lib/auth";
@@ -98,50 +95,31 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Dashboard — TernakPro" },
+      { title: "Dashboard — KARTANING" },
       { name: "description", content: "Ringkasan populasi ternak, kesehatan, produksi susu dan stok pakan dalam satu dashboard." },
-      { property: "og:title", content: "Dashboard — TernakPro" },
+      { property: "og:title", content: "Dashboard — KARTANING" },
       { property: "og:description", content: "Ringkasan populasi ternak, kesehatan, produksi susu dan stok pakan dalam satu dashboard." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Dashboard — TernakPro" },
+      { name: "twitter:title", content: "Dashboard — KARTANING" },
       { name: "twitter:description", content: "Ringkasan populasi ternak, kesehatan, produksi susu dan stok pakan dalam satu dashboard." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/fe7879fe-9da8-4ee8-8950-50d1ef49ef9b/id-preview-1f12388b--88f36c3e-c8fe-46d5-a039-ddabe5f4c0c6.lovable.app-1784545413665.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/fe7879fe-9da8-4ee8-8950-50d1ef49ef9b/id-preview-1f12388b--88f36c3e-c8fe-46d5-a039-ddabe5f4c0c6.lovable.app-1784545413665.png" },
     ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.png", type: "image/png" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap",
-      },
-    ],
   }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
 
-function RootShell({ children }: { children: ReactNode }) {
-  return (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
+import { registerServiceWorker } from "@/lib/offline-sync";
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

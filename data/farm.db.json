@@ -518,6 +518,32 @@
       "riwayatSingkat": "",
       "catatan": "",
       "fotoKambing": ""
+    },
+    {
+      "id": "fcdf1ba7-997c-4aa3-b803-0d77974302a1",
+      "tag": "TEST-OWNER-FIELDS",
+      "name": "Owner Test",
+      "jenis": "Sapi",
+      "ras": "Lokal",
+      "jenisKelamin": "Betina",
+      "umur": 0,
+      "berat": 0,
+      "kandang": "A-01",
+      "status": "Sehat",
+      "tanggalMasuk": "2026-07-23",
+      "umurKambing": "",
+      "ciriCiri": "",
+      "namaPemilik": "Sari",
+      "umurPemilik": "41",
+      "tinggiBadan": "",
+      "panjangBadan": "",
+      "lebarDada": "",
+      "kondisi": "Sehat",
+      "nafsuMakan": "Baik",
+      "feses": "Normal",
+      "riwayatSingkat": "",
+      "catatan": "",
+      "fotoKambing": ""
     }
   ],
   "healthChecks": [

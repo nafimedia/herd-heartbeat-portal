@@ -16,13 +16,28 @@ import { Route as KesehatanRouteImport } from './routes/kesehatan'
 import { Route as LaporanRouteImport } from './routes/laporan'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PakanRouteImport } from './routes/pakan'
+import { Route as ObatRouteImport } from './routes/obat'
 import { Route as PosyanduRouteImport } from './routes/posyandu'
 import { Route as ProduksiRouteImport } from './routes/produksi'
 import { Route as TernakRouteImport } from './routes/ternak'
+import { Route as UsersRouteImport } from './routes/users'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PanduanRouteImport } from './routes/panduan'
+import { Route as TernakTambahRouteImport } from './routes/ternak.tambah'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TernakTambahRoute = TernakTambahRouteImport.update({
+  id: '/ternak/tambah',
+  path: '/ternak/tambah',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PanduanRoute = PanduanRouteImport.update({
+  id: '/panduan',
+  path: '/panduan',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -55,6 +70,11 @@ const PakanRoute = PakanRouteImport.update({
   path: '/pakan',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ObatRoute = ObatRouteImport.update({
+  id: '/obat',
+  path: '/obat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PosyanduRoute = PosyanduRouteImport.update({
   id: '/posyandu',
   path: '/posyandu',
@@ -70,6 +90,16 @@ const TernakRoute = TernakRouteImport.update({
   path: '/ternak',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UsersRoute = UsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -79,9 +109,12 @@ export interface FileRoutesByFullPath {
   '/laporan': typeof LaporanRoute
   '/login': typeof LoginRoute
   '/pakan': typeof PakanRoute
+  '/obat': typeof ObatRoute
   '/posyandu': typeof PosyanduRoute
   '/produksi': typeof ProduksiRoute
   '/ternak': typeof TernakRoute
+  '/users': typeof UsersRoute
+  '/profile': typeof ProfileRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -91,9 +124,12 @@ export interface FileRoutesByTo {
   '/laporan': typeof LaporanRoute
   '/login': typeof LoginRoute
   '/pakan': typeof PakanRoute
+  '/obat': typeof ObatRoute
   '/posyandu': typeof PosyanduRoute
   '/produksi': typeof ProduksiRoute
   '/ternak': typeof TernakRoute
+  '/users': typeof UsersRoute
+  '/profile': typeof ProfileRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -104,9 +140,11 @@ export interface FileRoutesById {
   '/laporan': typeof LaporanRoute
   '/login': typeof LoginRoute
   '/pakan': typeof PakanRoute
+  '/obat': typeof ObatRoute
   '/posyandu': typeof PosyanduRoute
   '/produksi': typeof ProduksiRoute
   '/ternak': typeof TernakRoute
+  '/users': typeof UsersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -211,6 +249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PakanRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/obat': {
+      id: '/obat'
+      path: '/obat'
+      fullPath: '/obat'
+      preLoaderRoute: typeof ObatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/posyandu': {
       id: '/posyandu'
       path: '/posyandu'
@@ -232,6 +277,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TernakRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/users': {
+      id: '/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof UsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/panduan': {
+      id: '/panduan'
+      path: '/panduan'
+      fullPath: '/panduan'
+      preLoaderRoute: typeof PanduanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ternak/tambah': {
+      id: '/ternak/tambah'
+      path: '/ternak/tambah'
+      fullPath: '/ternak/tambah'
+      preLoaderRoute: typeof TernakTambahRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -243,20 +316,16 @@ const rootRouteChildren: RootRouteChildren = {
   LaporanRoute: LaporanRoute,
   LoginRoute: LoginRoute,
   PakanRoute: PakanRoute,
+  ObatRoute: ObatRoute,
   PosyanduRoute: PosyanduRoute,
   ProduksiRoute: ProduksiRoute,
   TernakRoute: TernakRoute,
+  TernakTambahRoute: TernakTambahRoute,
+  UsersRoute: UsersRoute,
+  ProfileRoute: ProfileRoute,
+  PanduanRoute: PanduanRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

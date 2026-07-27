@@ -35,8 +35,23 @@ export function getPool() {
         return {
           async query(q, params = []) {
             // translate $1..$n -> ? for mysql
-            const translated = q.replace(/\$\d+/g, '?');
-            const [rows] = await conn.execute(translated, params);
+            let translated = q.replace(/\$\d+/g, '?');
+            const isReturning = /RETURNING \*/i.test(translated);
+            if (isReturning) {
+              translated = translated.replace(/\s+RETURNING \*/i, '');
+            }
+            const [result] = await conn.execute(translated, params);
+            let rows = Array.isArray(result) ? result : [];
+            if (isReturning && !Array.isArray(result)) {
+              if (params && params[0]) {
+                const tableNameMatch = q.match(/(?:INSERT INTO|UPDATE)\s+([a-zA-Z0-9_]+)/i);
+                if (tableNameMatch) {
+                  const tableName = tableNameMatch[1];
+                  const [fetched] = await conn.execute(`SELECT * FROM ${tableName} WHERE id = ?`, [params[0]]);
+                  rows = fetched;
+                }
+              }
+            }
             return { rows };
           },
           release() {
@@ -80,7 +95,7 @@ export async function ensureSqlSchema() {
         status VARCHAR(255) NOT NULL,
         tanggal_masuk VARCHAR(255) NOT NULL,
         umur_kambing VARCHAR(255) DEFAULT '',
-        ciri_ciri TEXT DEFAULT '',
+        ciri_ciri TEXT,
         nama_pemilik VARCHAR(255) DEFAULT '',
         umur_pemilik VARCHAR(255) DEFAULT '',
         tinggi_badan VARCHAR(255) DEFAULT '',
@@ -89,11 +104,39 @@ export async function ensureSqlSchema() {
         kondisi VARCHAR(255) DEFAULT 'Sehat',
         nafsu_makan VARCHAR(255) DEFAULT 'Baik',
         feses VARCHAR(255) DEFAULT 'Normal',
-        riwayat_singkat TEXT DEFAULT '',
-        catatan TEXT DEFAULT '',
-        foto_kambing TEXT DEFAULT ''
+        riwayat_singkat TEXT,
+        catatan TEXT,
+        foto_kambing TEXT
       );`);
-      await client.query(`ALTER TABLE animals ADD COLUMN IF NOT EXISTS foto_kambing TEXT DEFAULT ''`);
+      const extraColumns = [
+        ['umur_kambing', "VARCHAR(255) DEFAULT ''"],
+        ['ciri_ciri', 'TEXT'],
+        ['nama_pemilik', "VARCHAR(255) DEFAULT ''"],
+        ['umur_pemilik', "VARCHAR(255) DEFAULT ''"],
+        ['status_kepemilikan', "VARCHAR(255) DEFAULT 'Kepemilikan sendiri'"],
+        ['tinggi_badan', "VARCHAR(255) DEFAULT ''"],
+        ['panjang_badan', "VARCHAR(255) DEFAULT ''"],
+        ['lebar_dada', "VARCHAR(255) DEFAULT ''"],
+        ['kondisi', "VARCHAR(255) DEFAULT 'Sehat'"],
+        ['nafsu_makan', "VARCHAR(255) DEFAULT 'Baik'"],
+        ['feses', "VARCHAR(255) DEFAULT 'Normal'"],
+        ['riwayat_singkat', 'TEXT'],
+        ['catatan', 'TEXT'],
+        ['foto_kambing', 'TEXT'],
+      ];
+      for (const [colName, colDef] of extraColumns) {
+        const { rows: columnRows } = await client.query(
+          `SELECT COUNT(*) AS count
+           FROM information_schema.columns
+           WHERE table_schema = DATABASE()
+             AND table_name = 'animals'
+             AND column_name = ?`,
+          [colName],
+        );
+        if (Number(columnRows[0]?.count || 0) === 0) {
+          await client.query(`ALTER TABLE animals ADD COLUMN ${colName} ${colDef}`);
+        }
+      }
 
       await client.query(`CREATE TABLE IF NOT EXISTS health_checks (
         id VARCHAR(255) PRIMARY KEY,

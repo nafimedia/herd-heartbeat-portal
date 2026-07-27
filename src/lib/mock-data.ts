@@ -1,5 +1,5 @@
 export type StatusTernak = "Sehat" | "Sakit" | "Bunting" | "Karantina";
-export type JenisTernak = "Sapi" | "Kambing" | "Domba" | "Ayam" | "Kerbau";
+export type JenisTernak = "Sapi" | "Kambing" | "Domba" | "Ayam" | "Bebek" | "Kerbau";
 
 export interface Ternak {
   id: string;
@@ -12,19 +12,36 @@ export interface Ternak {
   kandang: string;
   status: StatusTernak;
   tanggalMasuk: string;
+  hasilProduksi?: string;
+  estimasiPakan?: string;
 }
 
 export const daftarTernak: Ternak[] = [
-  { id: "1", tag: "SP-001", jenis: "Sapi", ras: "Limousin", jenisKelamin: "Jantan", umur: 24, berat: 480, kandang: "A-01", status: "Sehat", tanggalMasuk: "2024-03-12" },
-  { id: "2", tag: "SP-002", jenis: "Sapi", ras: "Simental", jenisKelamin: "Betina", umur: 30, berat: 520, kandang: "A-02", status: "Bunting", tanggalMasuk: "2024-01-08" },
-  { id: "3", tag: "SP-003", jenis: "Sapi", ras: "Brahman", jenisKelamin: "Jantan", umur: 18, berat: 410, kandang: "A-03", status: "Sehat", tanggalMasuk: "2024-05-20" },
-  { id: "4", tag: "KB-014", jenis: "Kambing", ras: "Etawa", jenisKelamin: "Betina", umur: 14, berat: 42, kandang: "B-04", status: "Sehat", tanggalMasuk: "2024-06-11" },
-  { id: "5", tag: "KB-015", jenis: "Kambing", ras: "Etawa", jenisKelamin: "Jantan", umur: 20, berat: 55, kandang: "B-04", status: "Sakit", tanggalMasuk: "2024-02-14" },
-  { id: "6", tag: "DM-007", jenis: "Domba", ras: "Merino", jenisKelamin: "Betina", umur: 12, berat: 38, kandang: "C-01", status: "Sehat", tanggalMasuk: "2024-07-02" },
-  { id: "7", tag: "DM-008", jenis: "Domba", ras: "Garut", jenisKelamin: "Jantan", umur: 22, berat: 62, kandang: "C-02", status: "Karantina", tanggalMasuk: "2024-04-19" },
-  { id: "8", tag: "KR-002", jenis: "Kerbau", ras: "Murrah", jenisKelamin: "Betina", umur: 36, berat: 610, kandang: "A-05", status: "Sehat", tanggalMasuk: "2023-11-30" },
-  { id: "9", tag: "SP-004", jenis: "Sapi", ras: "PO", jenisKelamin: "Betina", umur: 28, berat: 450, kandang: "A-06", status: "Bunting", tanggalMasuk: "2024-02-25" },
-  { id: "10", tag: "KB-016", jenis: "Kambing", ras: "Boer", jenisKelamin: "Jantan", umur: 16, berat: 48, kandang: "B-05", status: "Sehat", tanggalMasuk: "2024-08-01" },
+  // Sapi
+  { id: "1", tag: "SP-001", jenis: "Sapi", ras: "Limousin", jenisKelamin: "Jantan", umur: 24, berat: 480, kandang: "Kandang Sapi A-01", status: "Sehat", tanggalMasuk: "2024-03-12", hasilProduksi: "18 L Susu / Hari", estimasiPakan: "25 kg Hijauan + 4 kg Konsentrat" },
+  { id: "2", tag: "SP-002", jenis: "Sapi", ras: "Simmental", jenisKelamin: "Betina", umur: 30, berat: 520, kandang: "Kandang Sapi A-02", status: "Bunting", tanggalMasuk: "2024-01-08", hasilProduksi: "22 L Susu / Hari", estimasiPakan: "30 kg Hijauan + 5 kg Konsentrat" },
+  { id: "3", tag: "SP-003", jenis: "Sapi", ras: "Brahman", jenisKelamin: "Jantan", umur: 18, berat: 410, kandang: "Kandang Sapi A-03", status: "Sehat", tanggalMasuk: "2024-05-20", hasilProduksi: "Sapi Potong Super", estimasiPakan: "22 kg Hijauan + 3.5 kg Konsentrat" },
+  { id: "4", tag: "SP-004", jenis: "Sapi", ras: "Perah FH", jenisKelamin: "Betina", umur: 28, berat: 460, kandang: "Kandang Sapi A-04", status: "Sehat", tanggalMasuk: "2024-02-25", hasilProduksi: "25 L Susu / Hari", estimasiPakan: "28 kg Hijauan + 5 kg Konsentrat" },
+
+  // Kambing
+  { id: "5", tag: "KB-014", jenis: "Kambing", ras: "Etawa PE", jenisKelamin: "Betina", umur: 14, berat: 42, kandang: "Kandang Kambing B-01", status: "Sehat", tanggalMasuk: "2024-06-11", hasilProduksi: "2.2 L Susu / Hari", estimasiPakan: "4 kg Hijauan + 0.5 kg Konsentrat" },
+  { id: "6", tag: "KB-015", jenis: "Kambing", ras: "Boer", jenisKelamin: "Jantan", umur: 20, berat: 55, kandang: "Kandang Kambing B-02", status: "Sakit", tanggalMasuk: "2024-02-14", hasilProduksi: "Kambing Pedaging", estimasiPakan: "5 kg Hijauan + 0.8 kg Konsentrat" },
+  { id: "7", tag: "KB-016", jenis: "Kambing", ras: "Saanen", jenisKelamin: "Betina", umur: 18, berat: 45, kandang: "Kandang Kambing B-03", status: "Bunting", tanggalMasuk: "2024-08-01", hasilProduksi: "2.5 L Susu / Hari", estimasiPakan: "4.5 kg Hijauan + 0.6 kg Konsentrat" },
+
+  // Domba
+  { id: "8", tag: "DM-007", jenis: "Domba", ras: "Garut", jenisKelamin: "Jantan", umur: 22, berat: 62, kandang: "Kandang Domba C-01", status: "Sehat", tanggalMasuk: "2024-07-02", hasilProduksi: "Pedaging Premium & Kontes", estimasiPakan: "5 kg Hijauan + 0.7 kg Konsentrat" },
+  { id: "9", tag: "DM-008", jenis: "Domba", ras: "Merino", jenisKelamin: "Betina", umur: 16, berat: 42, kandang: "Kandang Domba C-02", status: "Karantina", tanggalMasuk: "2024-04-19", hasilProduksi: "Wol 3.5 kg / Tahun", estimasiPakan: "4 kg Hijauan + 0.5 kg Konsentrat" },
+  { id: "10", tag: "DM-009", jenis: "Domba", ras: "Texel", jenisKelamin: "Betina", umur: 14, berat: 48, kandang: "Kandang Domba C-03", status: "Bunting", tanggalMasuk: "2024-05-15", hasilProduksi: "Pedaging Super", estimasiPakan: "4.5 kg Hijauan + 0.6 kg Konsentrat" },
+
+  // Ayam
+  { id: "11", tag: "AY-101", jenis: "Ayam", ras: "Layer Petelur", jenisKelamin: "Betina", umur: 8, berat: 1.8, kandang: "Kandang Unggas D-01", status: "Sehat", tanggalMasuk: "2024-09-01", hasilProduksi: "1 Butir Telur / Hari", estimasiPakan: "120 gram Konsentrat Layer" },
+  { id: "12", tag: "AY-102", jenis: "Ayam", ras: "Kampung Super", jenisKelamin: "Betina", umur: 10, berat: 2.1, kandang: "Kandang Unggas D-02", status: "Sehat", tanggalMasuk: "2024-08-10", hasilProduksi: "Telur Organik", estimasiPakan: "130 gram Jagung & Pur" },
+  { id: "13", tag: "AY-103", jenis: "Ayam", ras: "Broiler", jenisKelamin: "Jantan", umur: 2, berat: 2.5, kandang: "Kandang Unggas D-03", status: "Sehat", tanggalMasuk: "2024-10-01", hasilProduksi: "Ayam Potong Siap Panen", estimasiPakan: "150 gram Pur Finisher" },
+
+  // Bebek
+  { id: "14", tag: "BK-201", jenis: "Bebek", ras: "Mojosari", jenisKelamin: "Betina", umur: 9, berat: 1.6, kandang: "Kandang Unggas E-01", status: "Sehat", tanggalMasuk: "2024-08-20", hasilProduksi: "Telur Asin Quality A", estimasiPakan: "140 gram Pakan Bebek" },
+  { id: "15", tag: "BK-202", jenis: "Bebek", ras: "Peking", jenisKelamin: "Jantan", umur: 3, berat: 3.2, kandang: "Kandang Unggas E-02", status: "Sehat", tanggalMasuk: "2024-09-15", hasilProduksi: "Bebek Potong Resto", estimasiPakan: "180 gram Pur Pedaging" },
+  { id: "16", tag: "BK-203", jenis: "Bebek", ras: "Alabio", jenisKelamin: "Betina", umur: 11, berat: 1.7, kandang: "Kandang Unggas E-03", status: "Bunting", tanggalMasuk: "2024-07-11", hasilProduksi: "1 Butir Telur / Hari", estimasiPakan: "145 gram Konsentrat" },
 ];
 
 export const populasiBulanan = [

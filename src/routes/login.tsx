@@ -1,21 +1,43 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ShieldCheck, Sparkles, ArrowRight } from "lucide-react";
+import {
+  ShieldCheck,
+  Sparkles,
+  ArrowRight,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  CheckCircle2,
+  KeyRound,
+  Activity,
+  Award,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { clearAuthSession, saveAuthSession } from "@/lib/auth";
 import { validateLoginForm } from "@/lib/validation";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
+  head: () => ({
+    meta: [
+      { title: "Login Admin — KARTANING" },
+      { name: "description", content: "Portal login administrator KARTANING - Sistem Manajemen Peternakan Mindajaya." },
+    ],
+  }),
   component: LoginPage,
 });
 
 export function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@farm.local");
-  const [password, setPassword] = useState("password");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -38,7 +60,7 @@ export function LoginPage() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:3001/api/login", {
+      const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -51,12 +73,12 @@ export function LoginPage() {
       }
 
       saveAuthSession({ token: data.token, user: data.user });
-      toast.success("Login berhasil. Selamat datang.");
+      toast.success("Login berhasil. Selamat datang di Dashboard Admin.");
       try {
         await router.navigate({ to: "/dashboard" });
       } catch (navigationError) {
         console.error("Navigation failed", navigationError);
-        window.location.assign('/dashboard');
+        window.location.assign("/dashboard");
       }
     } catch (loginError) {
       console.error("Login failed", loginError);
@@ -68,82 +90,179 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.16),_transparent_35%),linear-gradient(135deg,_#f8fff8_0%,_#f3f8ff_100%)] p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto flex min-h-screen max-w-6xl items-center justify-center">
-        <div className="grid w-full gap-6 rounded-[28px] border border-border/60 bg-background/90 p-4 shadow-[0_30px_80px_rgba(15,23,42,0.12)] backdrop-blur lg:grid-cols-[1.1fr_0.9fr] lg:p-8">
-          <div className="flex flex-col justify-between rounded-[24px] bg-gradient-to-br from-emerald-600 via-emerald-500 to-lime-500 p-6 text-white sm:p-8">
+    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-slate-950 p-4 sm:p-6 lg:p-8">
+      {/* Dynamic Ambient Glow Background */}
+      <div className="pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-emerald-500/20 blur-[120px]" />
+      <div className="pointer-events-none absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-teal-500/20 blur-[120px]" />
+
+      <div className="relative z-10 w-full max-w-5xl">
+        <div className="grid w-full overflow-hidden rounded-3xl border border-white/10 bg-slate-900/80 shadow-[0_30px_90px_rgba(0,0,0,0.5)] backdrop-blur-2xl lg:grid-cols-12">
+          {/* Left Branding Hero Panel */}
+          <div className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 p-8 text-white lg:col-span-6 lg:p-10">
+            {/* Background Pattern Overlay */}
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.15),_transparent_60%)]" />
+
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/15 px-3 py-1 text-sm font-medium backdrop-blur">
-                <Sparkles className="h-4 w-4" />
-                TernakPro Admin Portal
-              </div>
-              <h1 className="mt-6 text-3xl font-semibold leading-tight sm:text-4xl">
-                Kelola ternak Anda dengan lebih tenang dan terarah.
-              </h1>
-              <p className="mt-4 max-w-md text-sm text-white/90 sm:text-base">
-                Pantau data ternak, kesehatan, produksi, dan pemilik dalam satu dashboard yang modern.
-              </p>
-            </div>
-            <div className="mt-8 rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur">
-              <div className="flex items-center gap-3">
-                <div className="rounded-full bg-white/20 p-2">
-                  <ShieldCheck className="h-5 w-5" />
+              {/* Back to landing page link */}
+              <Link
+                to="/"
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white/90 backdrop-blur transition-colors hover:bg-white/20"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Beranda Landing Page
+              </Link>
+
+              {/* Logo & Portal Badge */}
+              <div className="mt-8 flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/30 bg-white/20 p-2 backdrop-blur shadow-inner">
+                  <img
+                    src="/images/logomindajaya.png"
+                    alt="Minda Jaya Logo"
+                    className="h-full w-full object-contain"
+                  />
                 </div>
                 <div>
-                  <p className="font-medium">Akses aman untuk administrator</p>
-                  <p className="text-sm text-white/85">Login menggunakan kredensial demo yang sudah disiapkan.</p>
+                  <h2 className="text-xl font-extrabold tracking-tight text-white">KARTANING</h2>
+                  <p className="text-xs text-white/80 font-medium">Sistem Pendataan & Manajemen Peternakan</p>
                 </div>
               </div>
+
+              <h1 className="mt-8 text-3xl font-bold leading-tight text-white sm:text-4xl">
+                Operasional Peternakan yang Lebih Terstruktur.
+              </h1>
+              <p className="mt-4 text-sm text-white/85 leading-relaxed">
+                Kelola data ternak (Kambing, Domba, Sapi, Ayam, Bebek), rekam kartu kesehatan medis, persediaan obat & stok pakan secara profesional dalam satu portal admin.
+              </p>
+            </div>
+
+            {/* Feature Highlights Card */}
+            <div className="mt-8 space-y-3">
+              <div className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/10 p-3.5 backdrop-blur">
+                <CheckCircle2 className="h-5 w-5 text-emerald-300 shrink-0" />
+                <div className="text-xs">
+                  <p className="font-semibold text-white">Pendataan Multi-Jenis Ternak</p>
+                  <p className="text-white/75">Pencatatan lengkap sapi, kambing, domba & unggas.</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/10 p-3.5 backdrop-blur">
+                <ShieldCheck className="h-5 w-5 text-teal-300 shrink-0" />
+                <div className="text-xs">
+                  <p className="font-semibold text-white">Akses Admin Terproteksi</p>
+                  <p className="text-white/75">Autentikasi aman dengan kontrol sesi terenkripsi.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Credit */}
+            <div className="mt-8 border-t border-white/15 pt-4 text-[11px] text-white/70">
+              Created by : tim PKM posyandu ternak unu purwokerto dan kelompok ternak mindajaya farm 2026
             </div>
           </div>
 
-          <Card className="border-0 shadow-none">
-            <CardHeader className="px-0 pb-4">
-              <CardTitle className="text-2xl font-semibold text-foreground">Masuk ke akun admin</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Silakan gunakan email dan password yang telah disediakan.
-              </p>
-            </CardHeader>
-            <CardContent className="px-0">
-              <form id="login-form" onSubmit={handleSubmit} noValidate className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-foreground">Email admin</label>
-                  <Input
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setErrors((current) => ({ ...current, email: "" }));
-                    }}
-                    placeholder="admin@farm.local"
-                    type="email"
-                    required
-                    className="h-11 rounded-xl border-border/70 bg-background/80"
-                  />
-                  {errors.email ? <p className="text-sm text-destructive">{errors.email}</p> : null}
+          {/* Right Form Login Panel */}
+          <div className="flex flex-col justify-between bg-slate-900 p-8 lg:col-span-6 lg:p-10">
+            <div>
+              <div className="flex items-center justify-between">
+                <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                  <KeyRound className="mr-1 h-3 w-3" /> Portal Administrator
+                </Badge>
+              </div>
+
+              <div className="mt-6">
+                <h2 className="text-2xl font-bold tracking-tight text-white">Masuk ke Akun Admin</h2>
+                <p className="mt-1.5 text-xs text-slate-400">
+                  Masukkan email dan password untuk mengakses dashboard manajemen KARTANING.
+                </p>
+              </div>
+
+              {/* Login Form */}
+              <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="email" className="text-xs font-semibold text-slate-300">
+                    Email Administrator
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setErrors((prev) => ({ ...prev, email: "" }));
+                      }}
+                      placeholder="admin@farm.local"
+                      required
+                      className="h-11 rounded-xl border-slate-700 bg-slate-800/80 pl-10 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500/20"
+                    />
+                  </div>
+                  {errors.email && <p className="text-xs text-rose-400">{errors.email}</p>}
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-foreground">Password</label>
-                  <Input
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      setErrors((current) => ({ ...current, password: "" }));
-                    }}
-                    placeholder="Masukkan password"
-                    type="password"
-                    required
-                    className="h-11 rounded-xl border-border/70 bg-background/80"
-                  />
-                  {errors.password ? <p className="text-sm text-destructive">{errors.password}</p> : null}
+
+                <div className="space-y-1.5">
+                  <label htmlFor="password" className="text-xs font-semibold text-slate-300">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setErrors((prev) => ({ ...prev, password: "" }));
+                      }}
+                      placeholder="Masukkan password"
+                      required
+                      className="h-11 rounded-xl border-slate-700 bg-slate-800/80 pl-10 pr-10 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {errors.password && <p className="text-xs text-rose-400">{errors.password}</p>}
                 </div>
-                {error ? <p className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p> : null}
-                <Button type="submit" className="h-11 w-full rounded-xl" disabled={loading}>
-                  {loading ? "Memproses..." : "Masuk"}
-                  {!loading ? <ArrowRight className="h-4 w-4" /> : null}
+
+                {error && (
+                  <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-400">
+                    {error}
+                  </div>
+                )}
+
+                {/* Remember Me Checkbox */}
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer text-slate-400 hover:text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="rounded border-slate-700 bg-slate-800 text-emerald-500 focus:ring-emerald-500/20"
+                    />
+                    <span>Ingat sesi browser saya</span>
+                  </label>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="h-11 w-full rounded-xl bg-emerald-500 font-semibold text-slate-950 hover:bg-emerald-400 transition-all duration-200 shadow-lg shadow-emerald-500/20"
+                >
+                  {loading ? (
+                    "Memproses Login..."
+                  ) : (
+                    <>
+                      Masuk ke Dashboard <ArrowRight className="ml-1.5 h-4 w-4" />
+                    </>
+                  )}
                 </Button>
               </form>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -29,9 +29,16 @@ function loadEnv() {
 
 const env = loadEnv();
 
+for (const [key, value] of Object.entries(env)) {
+  if (process.env[key] === undefined) {
+    process.env[key] = value;
+  }
+}
+
 export function getConfig() {
   return {
-    port: Number(env.PORT || 3001),
+    port: Number(process.env.PORT || env.PORT || 3000),
+    host: process.env.HOST || env.HOST || '0.0.0.0',
     dbFile: env.DB_FILE ? path.resolve(rootDir, env.DB_FILE) : path.join(rootDir, 'data', 'farm.db.json'),
     corsOrigin: env.CORS_ORIGIN || 'http://localhost:8080',
   };

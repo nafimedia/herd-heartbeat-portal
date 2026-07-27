@@ -1,6 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Activity, Beef, HeartPulse, Milk, Wheat, Plus, Syringe, TriangleAlert } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+  Activity,
+  Beef,
+  HeartPulse,
+  Milk,
+  Wheat,
+  Plus,
+  Syringe,
+  TriangleAlert,
+  Layers,
+  Search,
+  Filter,
+  Download,
+  ChevronRight,
+  Sparkles,
+  Bird,
+  Egg,
+  Sprout,
+} from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Area,
   AreaChart,
@@ -20,16 +38,37 @@ import { DashboardShell, StatCard } from "@/features/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Link } from "@tanstack/react-router";
 import {
   aktivitasTerbaru,
   distribusiStatus,
   populasiBulanan,
   produksiSusu,
+  daftarTernak,
+  type Ternak,
+  type StatusTernak,
 } from "@/lib/mock-data";
 import { peringatanDini } from "@/lib/kartu-data";
 import { getOverview } from "@/lib/api";
 import { downloadCsv } from "@/lib/export";
+import { MonthlyReportModal } from "@/components/monthly-report-modal";
+import { BackupRestoreModal } from "@/components/backup-restore-modal";
 import { toast } from "sonner";
 
 const levelStyle: Record<string, string> = {
@@ -41,10 +80,10 @@ const levelStyle: Record<string, string> = {
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — TernakPro" },
-      { name: "description", content: "Ringkasan populasi ternak, kesehatan, produksi susu dan stok pakan dalam satu dashboard." },
-      { property: "og:title", content: "Dashboard — TernakPro" },
-      { property: "og:description", content: "Ringkasan populasi ternak, kesehatan, produksi susu dan stok pakan dalam satu dashboard." },
+      { title: "Dashboard — KARTANING" },
+      { name: "description", content: "Ringkasan populasi ternak, kesehatan, produksi susu dan pengelompokan jenis ternak." },
+      { property: "og:title", content: "Dashboard — KARTANING" },
+      { property: "og:description", content: "Ringkasan populasi ternak, kesehatan, produksi susu dan pengelompokan jenis ternak." },
     ],
   }),
   component: DashboardPage,
@@ -65,9 +104,93 @@ const toneAktivitas: Record<string, string> = {
   ternak: "bg-accent/15 text-accent",
 };
 
+const statusVariant: Record<string, string> = {
+  Sehat: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+  Bunting: "bg-primary/15 text-primary border-primary/30",
+  Sakit: "bg-destructive/15 text-destructive border-destructive/30",
+  Karantina: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+};
+
+type CategoryType = "Semua" | "Kambing" | "Domba" | "Sapi" | "Ayam" | "Bebek";
+
+interface CategoryMeta {
+  type: CategoryType;
+  label: string;
+  emoji: string;
+  icon: typeof Beef;
+  colorBg: string;
+  colorBorder: string;
+  colorText: string;
+  desc: string;
+  defaultUnit: string;
+}
+
+const CATEGORIES_CONFIG: CategoryMeta[] = [
+  {
+    type: "Kambing",
+    label: "Kambing",
+    emoji: "🐐",
+    icon: Beef,
+    colorBg: "bg-emerald-500/10",
+    colorBorder: "border-emerald-500/30",
+    colorText: "text-emerald-600 dark:text-emerald-400",
+    desc: "Perah & Potong (Etawa PE, Boer, Saanen)",
+    defaultUnit: "Susu & Daging",
+  },
+  {
+    type: "Domba",
+    label: "Domba",
+    emoji: "🐑",
+    icon: Sprout,
+    colorBg: "bg-amber-500/10",
+    colorBorder: "border-amber-500/30",
+    colorText: "text-amber-600 dark:text-amber-400",
+    desc: "Potong & Wol (Garut, Merino, Texel)",
+    defaultUnit: "Daging & Wol",
+  },
+  {
+    type: "Sapi",
+    label: "Sapi",
+    emoji: "🐄",
+    icon: Beef,
+    colorBg: "bg-primary/10",
+    colorBorder: "border-primary/30",
+    colorText: "text-primary",
+    desc: "Potong & Perah (Limousin, Simmental, FH)",
+    defaultUnit: "Susu & Daging",
+  },
+  {
+    type: "Ayam",
+    label: "Ayam",
+    emoji: "🐔",
+    icon: Egg,
+    colorBg: "bg-rose-500/10",
+    colorBorder: "border-rose-500/30",
+    colorText: "text-rose-600 dark:text-rose-400",
+    desc: "Unggas Petelur & Broiler (Layer, Kampung)",
+    defaultUnit: "Telur & Daging",
+  },
+  {
+    type: "Bebek",
+    label: "Bebek",
+    emoji: "🦆",
+    icon: Bird,
+    colorBg: "bg-cyan-500/10",
+    colorBorder: "border-cyan-500/30",
+    colorText: "text-cyan-600 dark:text-cyan-400",
+    desc: "Unggas Air (Mojosari, Peking, Alabio)",
+    defaultUnit: "Telur & Daging",
+  },
+];
+
 function DashboardPage() {
   const [overview, setOverview] = useState<{ totalAnimals: number; sehat: number; stokKritis: number; totalProduksi: number } | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Filter State Pengelompokan Ternak
+  const [selectedCategory, setSelectedCategory] = useState<CategoryType>("Semua");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("semua");
 
   useEffect(() => {
     let active = true;
@@ -103,6 +226,50 @@ function DashboardPage() {
   const ternakSehat = overview?.sehat ?? 168;
   const stokKritis = overview?.stokKritis ?? 2;
 
+  // Hitung Populasi per Jenis Ternak
+  const categoryStats = useMemo(() => {
+    const stats: Record<string, { total: number; sehat: number; bunting: number; sakit: number }> = {
+      Sapi: { total: 0, sehat: 0, bunting: 0, sakit: 0 },
+      Kambing: { total: 0, sehat: 0, bunting: 0, sakit: 0 },
+      Domba: { total: 0, sehat: 0, bunting: 0, sakit: 0 },
+      Ayam: { total: 0, sehat: 0, bunting: 0, sakit: 0 },
+      Bebek: { total: 0, sehat: 0, bunting: 0, sakit: 0 },
+    };
+
+    daftarTernak.forEach((t) => {
+      if (stats[t.jenis]) {
+        stats[t.jenis].total += 1;
+        if (t.status === "Sehat") stats[t.jenis].sehat += 1;
+        if (t.status === "Bunting") stats[t.jenis].bunting += 1;
+        if (t.status === "Sakit") stats[t.jenis].sakit += 1;
+      }
+    });
+
+    return stats;
+  }, []);
+
+  // Filter Data Ternak Berdasarkan Pengelompokan
+  const filteredLivestock = useMemo(() => {
+    return daftarTernak.filter((item) => {
+      const matchCat = selectedCategory === "Semua" || item.jenis === selectedCategory;
+      const q = searchQuery.toLowerCase();
+      const matchQuery =
+        item.tag.toLowerCase().includes(q) ||
+        item.ras.toLowerCase().includes(q) ||
+        item.kandang.toLowerCase().includes(q) ||
+        item.jenis.toLowerCase().includes(q);
+      const matchStatus = statusFilter === "semua" || item.status === statusFilter;
+      return matchCat && matchQuery && matchStatus;
+    });
+  }, [selectedCategory, searchQuery, statusFilter]);
+
+  const handleExportGroup = () => {
+    const exportData = filteredLivestock as unknown as Record<string, unknown>[];
+    const filename = `pengelompokan-ternak-${selectedCategory.toLowerCase()}.csv`;
+    downloadCsv(filename, exportData.length > 0 ? exportData : (daftarTernak as unknown as Record<string, unknown>[]));
+    toast.success(`Data pengelompokan ${selectedCategory} berhasil diekspor.`);
+  };
+
   const handleExport = () => {
     downloadCsv("dashboard-ringkasan.csv", activityRows);
     toast.success("Ringkasan dashboard berhasil diekspor.");
@@ -113,14 +280,18 @@ function DashboardPage() {
       title="Selamat datang kembali, Pak Tono 👋"
       subtitle="Ringkasan operasional peternakan hari ini, Minggu 12 Juli 2026."
       actions={
-        <>
-          <Button variant="outline" onClick={handleExport}>Ekspor Laporan</Button>
-          <Button>
-            <Plus /> Tambah Ternak
+        <div className="flex flex-wrap items-center gap-2">
+          <MonthlyReportModal />
+          <BackupRestoreModal />
+          <Button asChild className="gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">
+            <Link to="/ternak">
+              <Plus className="h-4 w-4" /> Tambah Ternak
+            </Link>
           </Button>
-        </>
+        </div>
       }
     >
+      {/* Top Metric Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Total Populasi" value={loading ? "—" : `${totalPopulasi}`} hint="Ekor tercatat aktif" delta={4.2} icon={Beef} tone="primary" />
         <StatCard label="Produksi Susu" value={loading ? "—" : totalProduksi} hint="Hari ini" delta={2.8} icon={Milk} tone="accent" />
@@ -128,6 +299,187 @@ function DashboardPage() {
         <StatCard label="Stok Pakan Kritis" value={loading ? "—" : `${stokKritis}`} hint="Item di bawah minimum" delta={-12} icon={TriangleAlert} tone="warning" />
       </div>
 
+      {/* FITUR PENGELOMPOKAN TERNAK */}
+      <Card className="mt-6 border-border/80 bg-gradient-to-br from-card to-background shadow-sm">
+        <CardHeader className="border-b border-border/50 pb-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary border border-primary/20">
+                <Layers className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-bold tracking-tight">Pengelompokan Ternak</CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Kelola data, pencarian, pemantauan populasi, dan analisis berdasarkan jenis ternak (Kambing, Domba, Sapi, Ayam, Bebek).
+                </p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleExportGroup} className="w-fit">
+              <Download className="mr-1.5 h-4 w-4" /> Ekspor Data {selectedCategory}
+            </Button>
+          </div>
+        </CardHeader>
+
+        <CardContent className="pt-6 space-y-6">
+          {/* Category Cards Summary */}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {CATEGORIES_CONFIG.map((cat) => {
+              const stat = categoryStats[cat.type] || { total: 0, sehat: 0 };
+              const isSelected = selectedCategory === cat.type;
+              return (
+                <div
+                  key={cat.type}
+                  onClick={() => setSelectedCategory(isSelected ? "Semua" : cat.type)}
+                  className={`group relative cursor-pointer rounded-xl border p-4 transition-all duration-200 hover:shadow-md ${
+                    isSelected
+                      ? `border-primary bg-primary/10 ring-2 ring-primary/30 shadow-sm`
+                      : `border-border/60 bg-card hover:border-primary/50`
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">{cat.emoji}</span>
+                    <Badge variant="outline" className={`font-mono font-bold text-xs ${cat.colorBg} ${cat.colorText} ${cat.colorBorder}`}>
+                      {stat.total} Ekor
+                    </Badge>
+                  </div>
+                  <div className="mt-3">
+                    <h4 className="font-bold text-foreground group-hover:text-primary transition-colors flex items-center justify-between">
+                      <span>{cat.label}</span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground leading-tight mt-1 line-clamp-2">{cat.desc}</p>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2 text-[11px]">
+                    <span className="text-muted-foreground">Status Sehat:</span>
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">{stat.sehat} Ekor</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Interactive Tabs & Filter Controls */}
+          <div className="flex flex-col gap-4 border-t border-border/60 pt-4 md:flex-row md:items-center md:justify-between">
+            {/* Filter Tabs */}
+            <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-border/60 bg-muted/40 p-1">
+              <button
+                onClick={() => setSelectedCategory("Semua")}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
+                  selectedCategory === "Semua"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Semua ({daftarTernak.length})
+              </button>
+              {CATEGORIES_CONFIG.map((cat) => {
+                const count = categoryStats[cat.type]?.total || 0;
+                return (
+                  <button
+                    key={cat.type}
+                    onClick={() => setSelectedCategory(cat.type)}
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
+                      selectedCategory === cat.type
+                        ? "bg-background text-primary shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <span>{cat.emoji}</span>
+                    <span>{cat.label} ({count})</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Quick Search & Status Filter */}
+            <div className="flex flex-col sm:flex-row items-center gap-2">
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Cari tag, ras, kandang..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 text-xs h-9"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-36 text-xs h-9">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="semua">Semua Status</SelectItem>
+                  <SelectItem value="Sehat">Sehat</SelectItem>
+                  <SelectItem value="Bunting">Bunting</SelectItem>
+                  <SelectItem value="Sakit">Sakit</SelectItem>
+                  <SelectItem value="Karantina">Karantina</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Table List per Group */}
+          <div className="rounded-xl border border-border/60 overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/30">
+                  <TableHead className="w-24">Ear Tag</TableHead>
+                  <TableHead>Jenis & Ras</TableHead>
+                  <TableHead>Kelamin & Umur</TableHead>
+                  <TableHead>Bobot / Berat</TableHead>
+                  <TableHead>Kandang / Lokasi</TableHead>
+                  <TableHead>Estimasi Pakan Harian</TableHead>
+                  <TableHead>Hasil Produksi</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredLivestock.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="h-28 text-center text-muted-foreground text-xs">
+                      Tidak ada data ternak untuk kategori atau pencarian ini.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredLivestock.map((item) => (
+                    <TableRow key={item.id} className="hover:bg-muted/40 text-xs">
+                      <TableCell className="font-mono font-bold text-foreground">
+                        {item.tag}
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-semibold text-foreground">{item.ras}</div>
+                        <div className="text-[11px] text-muted-foreground">{item.jenis}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div>{item.jenisKelamin}</div>
+                        <div className="text-[11px] text-muted-foreground">{item.umur} bulan</div>
+                      </TableCell>
+                      <TableCell className="font-mono font-semibold tabular-nums">
+                        {item.berat} kg
+                      </TableCell>
+                      <TableCell className="text-muted-foreground font-medium">
+                        {item.kandang}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {item.estimasiPakan || "-"}
+                      </TableCell>
+                      <TableCell className="font-medium text-emerald-600 dark:text-emerald-400">
+                        {item.hasilProduksi || "-"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={statusVariant[item.status] || ""}>
+                          {item.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Early Warnings Section */}
       <Card className="mt-6 border-destructive/20">
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div className="flex items-center gap-2">
@@ -165,11 +517,12 @@ function DashboardPage() {
         </CardContent>
       </Card>
 
+      {/* Charts Row */}
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <div>
-              <CardTitle>Pertumbuhan Populasi</CardTitle>
+              <CardTitle>Pertumbuhan Populasi per Jenis</CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">Perbandingan populasi 8 bulan terakhir</p>
             </div>
             <Badge variant="secondary">2026</Badge>

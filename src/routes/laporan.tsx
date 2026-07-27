@@ -9,7 +9,7 @@ import { produksiBulanan } from "@/lib/mock-data";
 export const Route = createFileRoute("/laporan")({
   head: () => ({
     meta: [
-      { title: "Laporan — TernakPro" },
+      { title: "Laporan — KARTANING" },
       { name: "description", content: "Laporan bulanan produksi, kesehatan, dan keuangan peternakan." },
     ],
   }),

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { IdCard, Printer, Plus, Search, Sprout, Camera, TrendingUp, AlertTriangle } from "lucide-react";
+import { IdCard, Printer, Plus, Search, Sprout, Camera, TrendingUp, AlertTriangle, QrCode, Filter } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { DashboardShell } from "@/features/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,17 +18,21 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { daftarKartu, type KartuKesehatanKambing } from "@/lib/kartu-data";
+import { loadDaftarObat, catatPenggunaanObat } from "@/lib/obat-data";
+import { AnimalQrTagCard, printAnimalQrTag, printBatchQrTags } from "@/components/qr-tag";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/kartu")({
   head: () => ({
     meta: [
-      { title: "Kartu Kesehatan Kambing — TernakPro" },
+      { title: "Kartu Kesehatan Ternak Digital — KARTANING" },
       {
         name: "description",
         content:
-          "Kartu kesehatan kambing digital: identitas, ukuran tubuh, status kesehatan, dan riwayat tindakan.",
+          "Kartu kesehatan ternak digital: Sapi, Kambing, Domba, Ayam, Bebek - identitas, ukuran tubuh, status kesehatan, dan cetak label tag.",
       },
     ],
   }),
@@ -37,32 +41,56 @@ export const Route = createFileRoute("/kartu")({
 
 function KartuPage() {
   const [query, setQuery] = useState("");
+  const [jenisFilter, setJenisFilter] = useState("semua");
   const [selected, setSelected] = useState<KartuKesehatanKambing | null>(null);
   const [openForm, setOpenForm] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
-    return daftarKartu.filter(
-      (k) =>
+    return daftarKartu.filter((k) => {
+      const itemJenis = k.jenis || "Kambing";
+      const matchQ =
         k.idKambing.toLowerCase().includes(q) ||
         k.namaPemilik.toLowerCase().includes(q) ||
-        k.ras.toLowerCase().includes(q),
-    );
-  }, [query]);
+        k.ras.toLowerCase().includes(q) ||
+        itemJenis.toLowerCase().includes(q);
+      const matchJenis = jenisFilter === "semua" || itemJenis === jenisFilter;
+      return matchQ && matchJenis;
+    });
+  }, [query, jenisFilter]);
+
+  const handleBatchPrint = () => {
+    const animalsToPrint = filtered.map((k) => ({
+      tag: k.idKambing,
+      jenis: k.jenis || "Kambing",
+      ras: k.ras,
+      kandang: "Kandang Utama",
+      namaPemilik: k.namaPemilik,
+      status: k.kondisi,
+    }));
+    printBatchQrTags(animalsToPrint);
+    toast.success(`Mencetak ${animalsToPrint.length} label tag ternak (Batch Print)...`);
+  };
 
   return (
     <DashboardShell
-      title="Kartu Kesehatan Kambing"
-      subtitle="Kelompok Tani Ternak Mindajaya — pendataan lengkap per ekor"
+      title="Kartu Kesehatan Ternak Digital"
+      subtitle="Kelompok Tani Ternak Mindajaya — Pendataan & cetak label medis seluruh jenis ternak (Sapi, Kambing, Domba, Unggas)"
       actions={
-        <Dialog open={openForm} onOpenChange={setOpenForm}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus /> Kartu Baru
-            </Button>
-          </DialogTrigger>
-          <KartuFormDialog onClose={() => setOpenForm(false)} />
-        </Dialog>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={handleBatchPrint} className="gap-1.5 border-emerald-500/40 text-emerald-600 hover:bg-emerald-50">
+            <QrCode className="h-4 w-4" /> Cetak Massal Tag Label ({filtered.length})
+          </Button>
+
+          <Dialog open={openForm} onOpenChange={setOpenForm}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-1.5 h-4 w-4" /> Kartu Baru
+              </Button>
+            </DialogTrigger>
+            <KartuFormDialog onClose={() => setOpenForm(false)} />
+          </Dialog>
+        </div>
       }
     >
       <Card className="mb-5 border-primary/30 bg-primary/5">
@@ -84,14 +112,33 @@ function KartuPage() {
         </CardContent>
       </Card>
 
-      <div className="relative mb-4 max-w-md">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Cari ID, pemilik, atau ras..."
-          className="pl-9"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex-1 max-w-md">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Cari ID Ear Tag, nama pemilik, atau ras..."
+            className="pl-9"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={jenisFilter} onValueChange={setJenisFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Semua Jenis Ternak" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="semua">Semua Jenis Ternak</SelectItem>
+              <SelectItem value="Sapi">🐄 Sapi</SelectItem>
+              <SelectItem value="Kambing">🐐 Kambing</SelectItem>
+              <SelectItem value="Domba">🐑 Domba</SelectItem>
+              <SelectItem value="Ayam">🐔 Ayam</SelectItem>
+              <SelectItem value="Bebek">🦆 Bebek</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -105,8 +152,8 @@ function KartuPage() {
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="text-xs font-medium text-muted-foreground">
-                      {k.ras}
+                    <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                      {k.jenis || "Kambing"} · {k.ras}
                     </div>
                     <CardTitle className="mt-1 font-mono text-lg">{k.idKambing}</CardTitle>
                   </div>
@@ -167,18 +214,53 @@ function KartuDetailDialog({ kartu }: { kartu: KartuKesehatanKambing }) {
   return (
     <DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto">
       <DialogHeader>
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-4">
           <div>
-            <DialogTitle className="font-mono text-xl">{kartu.idKambing}</DialogTitle>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Kartu Kesehatan Kambing — Kelompok Tani Ternak Mindajaya
+            <DialogTitle className="font-mono text-2xl flex items-center gap-2">
+              <QrCode className="h-5 w-5 text-emerald-600" /> {kartu.idKambing}
+            </DialogTitle>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Kartu Kesehatan Ternak Digital — Kelompok Tani Ternak Mindajaya
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => window.print()}>
-            <Printer /> Cetak
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                printAnimalQrTag({
+                  tag: kartu.idKambing,
+                  jenis: "Kambing",
+                  ras: kartu.ras,
+                  kandang: "Kandang Utama",
+                  namaPemilik: kartu.namaPemilik,
+                  status: kartu.kondisi,
+                })
+              }
+              className="gap-1.5 border-emerald-500/40 text-emerald-600 hover:bg-emerald-50"
+            >
+              <QrCode className="h-4 w-4" /> Cetak Tag Label (88mm)
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => window.print()} className="gap-1.5">
+              <Printer className="h-4 w-4" /> Cetak Laporan (A4)
+            </Button>
+          </div>
         </div>
       </DialogHeader>
+
+      {/* Visual QR Tag Card Section */}
+      <div className="my-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4 flex flex-col items-center">
+        <AnimalQrTagCard
+          animal={{
+            tag: kartu.idKambing,
+            jenis: "Kambing",
+            ras: kartu.ras,
+            kandang: "Kandang Utama",
+            namaPemilik: kartu.namaPemilik,
+            status: kartu.kondisi,
+          }}
+        />
+      </div>
 
       <Section title="A. Identitas Kambing">
         <Field label="ID / Nomor" value={kartu.idKambing} mono />
@@ -191,6 +273,7 @@ function KartuDetailDialog({ kartu }: { kartu: KartuKesehatanKambing }) {
       <Section title="B. Identitas Pemilik">
         <Field label="Nama Pemilik" value={kartu.namaPemilik} />
         <Field label="Umur Pemilik" value={`${kartu.umurPemilik} tahun`} />
+        <Field label="Status Kepemilikan" value={kartu.statusKepemilikan || "Kepemilikan sendiri"} />
       </Section>
 
       <Section title="C. Ukuran Tubuh">
@@ -306,6 +389,34 @@ function Field({
 }
 
 function KartuFormDialog({ onClose }: { onClose: () => void }) {
+  const [idKambing, setIdKambing] = useState("MJ-KB-005");
+  const [selectedObat, setSelectedObat] = useState("none");
+  const [jumlahObat, setJumlahObat] = useState("1");
+  const [petugas, setPetugas] = useState("Pak Tono");
+  const listObat = useMemo(() => loadDaftarObat(), []);
+
+  const handleSaveKartu = () => {
+    if (selectedObat && selectedObat !== "none") {
+      const jumlahNum = Math.max(1, parseInt(jumlahObat, 10) || 1);
+      const res = catatPenggunaanObat({
+        earTag: idKambing || "MJ-KB-005",
+        namaTernak: "Kambing Etawa (PE)",
+        namaObat: selectedObat,
+        jumlah: jumlahNum,
+        petugas: petugas || "Pak Tono",
+        keterangan: "Pemberian obat saat pengisian Kartu Kesehatan",
+      });
+      if (res.success) {
+        toast.success(`Kartu disimpan! Stok ${selectedObat} berkurang ${jumlahNum} dan tercatat di Riwayat Penggunaan.`);
+      } else {
+        toast.error(res.message || "Kartu disimpan, tetapi gagal mengurangi stok obat.");
+      }
+    } else {
+      toast.success("Kartu Kesehatan Kambing berhasil disimpan.");
+    }
+    onClose();
+  };
+
   return (
     <DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto">
       <DialogHeader>
@@ -316,7 +427,10 @@ function KartuFormDialog({ onClose }: { onClose: () => void }) {
       </DialogHeader>
 
       <FormSection title="A. Identitas Kambing">
-        <FormField label="ID / Nomor" placeholder="MJ-KB-005" />
+        <div>
+          <Label className="text-xs font-medium">ID / Nomor Ear Tag</Label>
+          <Input className="mt-1" value={idKambing} onChange={(e) => setIdKambing(e.target.value)} placeholder="MJ-KB-005" />
+        </div>
         <FormField label="Jenis / Ras" placeholder="Kambing Etawa (PE)" />
         <div>
           <Label className="text-xs">Kelamin</Label>
@@ -349,6 +463,17 @@ function KartuFormDialog({ onClose }: { onClose: () => void }) {
       <FormSection title="B. Identitas Pemilik">
         <FormField label="Nama Pemilik" placeholder="Bpk. Suparjo" />
         <FormField label="Umur Pemilik" placeholder="45" type="number" />
+        <div>
+          <Label className="text-xs font-medium">Status Kepemilikan</Label>
+          <Select defaultValue="Kepemilikan sendiri">
+            <SelectTrigger className="mt-1"><SelectValue placeholder="Pilih Status Kepemilikan" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Kepemilikan sendiri">Kepemilikan sendiri</SelectItem>
+              <SelectItem value="Kepemilikan kelompok">Kepemilikan kelompok</SelectItem>
+              <SelectItem value="Kepemilikan mitra">Kepemilikan mitra</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </FormSection>
 
       <FormSection title="C. Ukuran Tubuh">
@@ -361,16 +486,16 @@ function KartuFormDialog({ onClose }: { onClose: () => void }) {
       <FormSection title="D. Status Kesehatan">
         <div>
           <Label className="text-xs">Kondisi</Label>
-          <RadioGroup defaultValue="Sehat" className="mt-2 flex gap-4">
-            <div className="flex items-center gap-2">
-              <RadioGroupItem value="Sehat" id="ks" />
-              <Label htmlFor="ks" className="font-normal">Sehat</Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <RadioGroupItem value="Sakit" id="kk" />
-              <Label htmlFor="kk" className="font-normal">Sakit</Label>
-            </div>
-          </RadioGroup>
+          <Select defaultValue="Sehat">
+            <SelectTrigger className="mt-1"><SelectValue placeholder="Pilih Kondisi" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Sehat">Sehat</SelectItem>
+              <SelectItem value="Bunting Sehat">Bunting Sehat</SelectItem>
+              <SelectItem value="Bunting Sakit">Bunting Sakit</SelectItem>
+              <SelectItem value="Sakit">Sakit</SelectItem>
+              <SelectItem value="Mati">Mati</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <Label className="text-xs">Nafsu Makan</Label>
@@ -402,16 +527,59 @@ function KartuFormDialog({ onClose }: { onClose: () => void }) {
             </div>
           </RadioGroup>
         </div>
+
+        {/* Integration: Obat Yang Diberikan */}
+        <div className="sm:col-span-2 mt-2 rounded-lg border border-border/80 bg-muted/20 p-3 space-y-3">
+          <Label className="text-xs font-semibold text-primary">Obat yang Diberikan</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs text-muted-foreground">Pilih Obat</Label>
+              <Select value={selectedObat} onValueChange={setSelectedObat}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Pilih Obat (Opsional)" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Tanpa Obat</SelectItem>
+                  {listObat
+                    .filter((o) => o.status === "Aktif")
+                    .map((o) => (
+                      <SelectItem key={o.id} value={o.namaObat}>
+                        {o.namaObat} (Stok: {o.stok} {o.satuan})
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Jumlah Digunakan</Label>
+              <Input
+                type="number"
+                min="1"
+                className="mt-1"
+                placeholder="Contoh: 2"
+                value={jumlahObat}
+                onChange={(e) => setJumlahObat(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
       </FormSection>
 
       <div className="mt-4">
-        <Label className="text-sm font-semibold">F. Catatan</Label>
-        <Textarea className="mt-2" rows={3} placeholder="Catatan tambahan..." />
+        <Label className="text-sm font-semibold">F. Catatan & Petugas</Label>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 mt-1">
+          <div>
+            <Label className="text-xs text-muted-foreground">Nama Petugas</Label>
+            <Input className="mt-1" value={petugas} onChange={(e) => setPetugas(e.target.value)} placeholder="Nama Petugas" />
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground">Catatan Tambahan</Label>
+            <Input className="mt-1" placeholder="Catatan tambahan..." />
+          </div>
+        </div>
       </div>
 
       <DialogFooter className="mt-4">
         <Button variant="outline" onClick={onClose}>Batal</Button>
-        <Button onClick={onClose}>Simpan Kartu</Button>
+        <Button onClick={handleSaveKartu}>Simpan Kartu</Button>
       </DialogFooter>
     </DialogContent>
   );

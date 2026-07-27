@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Filter, Download, Save, Pencil, Trash2 } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Plus, Filter, Download, Save, Pencil, Trash2, QrCode } from "lucide-react";
 import { DashboardShell } from "@/features/layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,26 +17,32 @@ import {
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AnimalQrTagCard } from "@/components/qr-tag";
 import { createAnimal, deleteAnimal, getAnimals, updateAnimal } from "@/lib/api";
 import { validateAnimalForm } from "@/lib/validation";
 import { downloadCsv } from "@/lib/export";
+import { StatusTernak } from "@/lib/mock-data";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/ternak")({
   head: () => ({
     meta: [
-      { title: "Data Ternak — TernakPro" },
+      { title: "Data Ternak — KARTANING" },
       { name: "description", content: "Kelola daftar ternak dengan profil lengkap, identitas pemilik, ukuran tubuh, dan riwayat kesehatan." },
     ],
   }),
   component: TernakPage,
 });
 
-const statusVariant: Record<StatusTernak, string> = {
+const statusVariant: Record<string, string> = {
   Sehat: "bg-success/15 text-success border-success/30",
+  "Bunting Sehat": "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+  "Bunting Sakit": "bg-amber-500/15 text-amber-600 border-amber-500/30",
   Sakit: "bg-destructive/10 text-destructive border-destructive/30",
   Bunting: "bg-primary/10 text-primary border-primary/30",
   Karantina: "bg-warning/20 text-warning-foreground border-warning/40",
+  Mati: "bg-muted text-muted-foreground border-muted-foreground/30",
 };
 
 function buildHealthHistory(value: string) {
@@ -93,6 +99,7 @@ export function TernakPage() {
     ciriCiri: "",
     namaPemilik: "",
     umurPemilik: "",
+    statusKepemilikan: "Kepemilikan sendiri",
     tinggiBadan: "",
     panjangBadan: "",
     lebarDada: "",
@@ -106,6 +113,7 @@ export function TernakPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [qrModalAnimal, setQrModalAnimal] = useState<Record<string, unknown> | null>(null);
   const [selectedAnimalId, setSelectedAnimalId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -198,6 +206,7 @@ export function TernakPage() {
       ciriCiri: "",
       namaPemilik: "",
       umurPemilik: "",
+      statusKepemilikan: "Kepemilikan sendiri",
       tinggiBadan: "",
       panjangBadan: "",
       lebarDada: "",
@@ -228,6 +237,7 @@ export function TernakPage() {
     ciriCiri: form.ciriCiri,
     namaPemilik: form.namaPemilik,
     umurPemilik: form.umurPemilik,
+    statusKepemilikan: form.statusKepemilikan || "Kepemilikan sendiri",
     tinggiBadan: form.tinggiBadan,
     panjangBadan: form.panjangBadan,
     lebarDada: form.lebarDada,
@@ -299,6 +309,7 @@ export function TernakPage() {
       ciriCiri: String(data.ciriCiri || ""),
       namaPemilik: String(data.namaPemilik || ""),
       umurPemilik: String(data.umurPemilik || ""),
+      statusKepemilikan: String(data.statusKepemilikan || "Kepemilikan sendiri"),
       tinggiBadan: String(data.tinggiBadan || ""),
       panjangBadan: String(data.panjangBadan || ""),
       lebarDada: String(data.lebarDada || ""),
@@ -337,186 +348,18 @@ export function TernakPage() {
       title="Data Ternak"
       subtitle={`${animals.length} ekor tercatat dalam sistem`}
       actions={
-        <>
-          <Button variant="outline" onClick={handleExport}>
-            <Download /> Ekspor
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={handleExport} className="gap-1.5">
+            <Download className="h-4 w-4" /> Ekspor CSV
           </Button>
-          <Button type="button" onClick={resetForm}>
-            <Plus /> Tambah Ternak
+          <Button asChild className="gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">
+            <Link to="/ternak/tambah">
+              <Plus className="h-4 w-4" /> Form Tambah Ternak Baru
+            </Link>
           </Button>
-        </>
+        </div>
       }
     >
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <form id="animal-form" onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="space-y-4 rounded-xl border border-border/60 bg-background/40 p-4">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Identitas Kambing</h3>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="space-y-1 md:col-span-2">
-                    <label htmlFor="tag" className="text-sm font-medium">ID / Nomor</label>
-                    <Input id="tag" placeholder="ID / Nomor" value={form.tag} onChange={(e) => {
-                      setForm((current) => ({ ...current, tag: e.target.value }));
-                      setErrors((current) => ({ ...current, tag: "" }));
-                    }} />
-                    {errors.tag ? <p className="text-sm text-destructive">{errors.tag}</p> : null}
-                  </div>
-                  <div className="space-y-1">
-                    <label htmlFor="jenis" className="text-sm font-medium">Jenis Ternak</label>
-                    <Input id="jenis" placeholder="Jenis Ternak" value={form.jenis} onChange={(e) => {
-                      setForm((current) => ({ ...current, jenis: e.target.value }));
-                      setErrors((current) => ({ ...current, jenis: "" }));
-                    }} />
-                    {errors.jenis ? <p className="text-sm text-destructive">{errors.jenis}</p> : null}
-                  </div>
-                  <div className="space-y-1">
-                    <label htmlFor="ras" className="text-sm font-medium">Ras</label>
-                    <Input id="ras" placeholder="Ras" value={form.ras} onChange={(e) => {
-                      setForm((current) => ({ ...current, ras: e.target.value }));
-                      setErrors((current) => ({ ...current, ras: "" }));
-                    }} />
-                    {errors.ras ? <p className="text-sm text-destructive">{errors.ras}</p> : null}
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium">Kelamin</label>
-                    <Select value={form.jenisKelamin} onValueChange={(value) => setForm((current) => ({ ...current, jenisKelamin: value }))}>
-                      <SelectTrigger><SelectValue placeholder="Kelamin" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Jantan">Jantan</SelectItem>
-                        <SelectItem value="Betina">Betina</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1">
-                    <label htmlFor="umurKambing" className="text-sm font-medium">Umur Kambing</label>
-                    <Input id="umurKambing" type="number" min="0" placeholder="Umur Kambing" value={form.umurKambing} onChange={(e) => {
-                      setForm((current) => ({ ...current, umurKambing: e.target.value }));
-                      setErrors((current) => ({ ...current, umurKambing: "" }));
-                    }} />
-                    {errors.umurKambing ? <p className="text-sm text-destructive">{errors.umurKambing}</p> : null}
-                  </div>
-                  <div className="space-y-1 md:col-span-2">
-                    <label htmlFor="ciriCiri" className="text-sm font-medium">Ciri-ciri</label>
-                    <Textarea id="ciriCiri" placeholder="Ciri-ciri" value={form.ciriCiri} onChange={(e) => setForm((current) => ({ ...current, ciriCiri: e.target.value }))} rows={3} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4 rounded-xl border border-border/60 bg-background/40 p-4">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Identitas Pemilik</h3>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="space-y-1 md:col-span-2">
-                    <label htmlFor="namaPemilik" className="text-sm font-medium">Nama Pemilik</label>
-                    <Input id="namaPemilik" placeholder="Nama Pemilik" value={form.namaPemilik} onChange={(e) => {
-                      setForm((current) => ({ ...current, namaPemilik: e.target.value }));
-                      setErrors((current) => ({ ...current, namaPemilik: "" }));
-                    }} />
-                    {errors.namaPemilik ? <p className="text-sm text-destructive">{errors.namaPemilik}</p> : null}
-                  </div>
-                  <div className="space-y-1 md:col-span-2">
-                    <label htmlFor="umurPemilik" className="text-sm font-medium">Umur Pemilik</label>
-                    <Input id="umurPemilik" placeholder="Umur Pemilik" value={form.umurPemilik} onChange={(e) => setForm((current) => ({ ...current, umurPemilik: e.target.value }))} />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4 rounded-xl border border-border/60 bg-background/40 p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Ukuran Tubuh Kambing</h3>
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                <div className="space-y-1">
-                  <label htmlFor="berat" className="text-sm font-medium">Bobot Badan</label>
-                  <Input id="berat" type="number" min="0" placeholder="Bobot Badan" value={form.berat} onChange={(e) => {
-                    setForm((current) => ({ ...current, berat: e.target.value }));
-                    setErrors((current) => ({ ...current, berat: "" }));
-                  }} />
-                  {errors.berat ? <p className="text-sm text-destructive">{errors.berat}</p> : null}
-                </div>
-                <div className="space-y-1">
-                  <label htmlFor="tinggiBadan" className="text-sm font-medium">Tinggi Badan</label>
-                  <Input id="tinggiBadan" type="number" min="0" placeholder="Tinggi Badan" value={form.tinggiBadan} onChange={(e) => setForm((current) => ({ ...current, tinggiBadan: e.target.value }))} />
-                </div>
-                <div className="space-y-1">
-                  <label htmlFor="panjangBadan" className="text-sm font-medium">Panjang Badan</label>
-                  <Input id="panjangBadan" type="number" min="0" placeholder="Panjang Badan" value={form.panjangBadan} onChange={(e) => setForm((current) => ({ ...current, panjangBadan: e.target.value }))} />
-                </div>
-                <div className="space-y-1">
-                  <label htmlFor="lebarDada" className="text-sm font-medium">Lebar Dada</label>
-                  <Input id="lebarDada" type="number" min="0" placeholder="Lebar Dada" value={form.lebarDada} onChange={(e) => setForm((current) => ({ ...current, lebarDada: e.target.value }))} />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4 rounded-xl border border-border/60 bg-background/40 p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Status Kesehatan</h3>
-              <div className="grid gap-3 md:grid-cols-3">
-                <div className="space-y-1">
-                  <label className="text-sm font-medium">Kondisi</label>
-                  <Select value={form.kondisi} onValueChange={(value) => setForm((current) => ({ ...current, kondisi: value }))}>
-                    <SelectTrigger><SelectValue placeholder="Kondisi" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Sehat">Sehat</SelectItem>
-                      <SelectItem value="Sakit">Sakit</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-medium">Nafsu Makan</label>
-                  <Select value={form.nafsuMakan} onValueChange={(value) => setForm((current) => ({ ...current, nafsuMakan: value }))}>
-                    <SelectTrigger><SelectValue placeholder="Nafsu makan" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Baik">Baik</SelectItem>
-                      <SelectItem value="Tidak">Tidak</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-medium">Feses</label>
-                  <Select value={form.feses} onValueChange={(value) => setForm((current) => ({ ...current, feses: value }))}>
-                    <SelectTrigger><SelectValue placeholder="Feses" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Normal">Normal</SelectItem>
-                      <SelectItem value="Diare">Diare</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4 rounded-xl border border-border/60 bg-background/40 p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Foto Kambing</h3>
-              <Input type="file" accept="image/*" onChange={handlePhotoChange} />
-              {form.fotoKambing ? (
-                <img src={form.fotoKambing} alt="Preview kambing" className="h-40 w-full rounded-lg object-cover" />
-              ) : (
-                <div className="flex h-40 items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
-                  Belum ada foto yang dipilih.
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-4 rounded-xl border border-border/60 bg-background/40 p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Riwayat Singkat</h3>
-              <Textarea placeholder="Contoh: 2026-07-21 | Vaksin PMK" value={form.riwayatSingkat} onChange={(e) => setForm((current) => ({ ...current, riwayatSingkat: e.target.value }))} rows={4} />
-              <p className="text-sm text-muted-foreground">Setiap baris akan menjadi satu catatan riwayat kesehatan.</p>
-            </div>
-
-            <div className="space-y-4 rounded-xl border border-border/60 bg-background/40 p-4">
-              <label htmlFor="catatan" className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Catatan</label>
-              <Textarea id="catatan" placeholder="Catatan" value={form.catatan} onChange={(e) => setForm((current) => ({ ...current, catatan: e.target.value }))} rows={4} />
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/60 bg-background/40 p-4">
-              <div className="text-sm text-muted-foreground">Form ini menampung identitas kambing, pemilik, ukuran tubuh, status kesehatan, dan riwayat singkat.</div>
-              <Button type="submit" disabled={loading}>
-                <Save className="mr-2 h-4 w-4" /> {loading ? "Menyimpan..." : isEditing ? "Perbarui Data Kambing" : "Simpan Data Kambing"}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
@@ -607,7 +450,10 @@ export function TernakPage() {
                           <TableCell>{String(data.jenisKelamin || "-")}</TableCell>
                           <TableCell className="text-right tabular-nums">{String(data.umur || "-")}</TableCell>
                           <TableCell className="text-right tabular-nums">{String(data.berat || "-")}</TableCell>
-                          <TableCell>{String(data.namaPemilik || "-")}</TableCell>
+                          <TableCell>
+                            <div className="font-medium">{String(data.namaPemilik || "-")}</div>
+                            <div className="text-xs text-muted-foreground">{String(data.statusKepemilikan || "Kepemilikan sendiri")}</div>
+                          </TableCell>
                           <TableCell>
                             <Badge variant="outline" className={statusVariant[String(data.status) as StatusTernak] || ""}>
                               {String(data.status || "-")}
@@ -617,12 +463,24 @@ export function TernakPage() {
                             {String(data.tanggalMasuk || "-")}
                           </TableCell>
                           <TableCell>
-                            <div className="flex justify-end gap-2">
+                            <div className="flex justify-end gap-1.5">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                title="Cetak QR Tag"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setQrModalAnimal(t as Record<string, unknown>);
+                                }}
+                              >
+                                <QrCode className="h-4 w-4 text-emerald-600" /> QR Tag
+                              </Button>
                               <Button type="button" variant="outline" size="sm" onClick={(event) => { event.stopPropagation(); handleEdit(t as Record<string, unknown>); }}>
-                                <Pencil className="mr-1 h-4 w-4" /> Edit
+                                <Pencil className="h-4 w-4" /> Edit
                               </Button>
                               <Button type="button" variant="destructive" size="sm" onClick={(event) => { event.stopPropagation(); handleDelete(t as Record<string, unknown>); }}>
-                                <Trash2 className="mr-1 h-4 w-4" /> Hapus
+                                <Trash2 className="h-4 w-4" /> Hapus
                               </Button>
                             </div>
                           </TableCell>
@@ -660,8 +518,8 @@ export function TernakPage() {
                   </div>
                   <div className="grid gap-3 md:grid-cols-2">
                     <div>
-                      <p className="text-sm font-medium">Pemilik</p>
-                      <p className="text-sm text-muted-foreground">{String((selectedAnimal as Record<string, unknown>).namaPemilik || "-")}</p>
+                      <p className="text-sm font-medium">Pemilik & Status</p>
+                      <p className="text-sm text-muted-foreground">{String((selectedAnimal as Record<string, unknown>).namaPemilik || "-")} ({String((selectedAnimal as Record<string, unknown>).statusKepemilikan || "Kepemilikan sendiri")})</p>
                     </div>
                     <div>
                       <p className="text-sm font-medium">Ukuran</p>
@@ -710,6 +568,32 @@ export function TernakPage() {
           ) : null}
         </CardContent>
       </Card>
+
+      {/* DIALOG CETAK QR TAG TERNAK */}
+      <Dialog open={Boolean(qrModalAnimal)} onOpenChange={() => setQrModalAnimal(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <QrCode className="h-5 w-5 text-emerald-600" /> Cetak Label Tag Ternak
+            </DialogTitle>
+          </DialogHeader>
+
+          {qrModalAnimal && (
+            <div className="py-2">
+              <AnimalQrTagCard
+                animal={{
+                  tag: String(qrModalAnimal.tag || qrModalAnimal.id || ""),
+                  jenis: String(qrModalAnimal.jenis || "Ternak"),
+                  ras: String(qrModalAnimal.ras || "Lokal"),
+                  kandang: String(qrModalAnimal.kandang || "Kandang Utama"),
+                  namaPemilik: String(qrModalAnimal.namaPemilik || "KTT Mindajaya"),
+                  status: String(qrModalAnimal.status || "Sehat"),
+                }}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardShell>
   );
 }

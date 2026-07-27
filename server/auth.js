@@ -3,12 +3,36 @@ import { createHash } from 'node:crypto';
 import { getPool, ensureSqlSchema } from './sql.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'farm-dev-secret';
-const DEFAULT_ADMIN = {
-  id: 'admin-001',
-  email: 'admin@farm.local',
-  password: 'password',
-  role: 'admin',
-};
+const DEMO_USERS = [
+  {
+    id: 'admin-001',
+    email: 'admin@farm.local',
+    password: 'password',
+    role: 'admin',
+    name: 'Pak Tono (Ketua KTT)',
+  },
+  {
+    id: 'medis-001',
+    email: 'medis@farm.local',
+    password: 'password',
+    role: 'medis',
+    name: 'Drh. Ahmad (Petugas Medis)',
+  },
+  {
+    id: 'operator-001',
+    email: 'operator@farm.local',
+    password: 'password',
+    role: 'operator',
+    name: 'Mas Budi (Operator Farm)',
+  },
+  {
+    id: 'peternak-001',
+    email: 'peternak@farm.local',
+    password: 'password',
+    role: 'peternak',
+    name: 'Bpk. Suparjo (Mitra Peternak)',
+  },
+];
 
 export function hashPassword(password) {
   return createHash('sha256').update(password).digest('hex');
@@ -24,6 +48,7 @@ export async function authenticateAdmin(email, password) {
 
   const useSql = Boolean(process.env.DATABASE_URL || process.env.DB_MODE);
   if (useSql) {
+    await ensureSqlSchema();
     const client = await getPool().connect();
     try {
       const { rows } = await client.query('SELECT * FROM admin_users WHERE email = $1', [normalizedEmail]);
@@ -31,7 +56,7 @@ export async function authenticateAdmin(email, password) {
       if (user) {
         const expected = user.password_hash || '';
         if (expected === hashPassword(normalizedPassword)) {
-          return { ok: true, user: { id: user.id, email: user.email, role: user.role } };
+          return { ok: true, user: { id: user.id, email: user.email, role: user.role || 'admin', name: user.name || user.email } };
         }
       }
     } finally {
@@ -39,11 +64,20 @@ export async function authenticateAdmin(email, password) {
     }
   }
 
-  // fallback to the default embedded user
-  if (normalizedEmail === DEFAULT_ADMIN.email && normalizedPassword === DEFAULT_ADMIN.password) {
+  // Check embedded multi-role demo users
+  const matchedUser = DEMO_USERS.find(
+    (u) => u.email === normalizedEmail && u.password === normalizedPassword
+  );
+
+  if (matchedUser) {
     return {
       ok: true,
-      user: { id: DEFAULT_ADMIN.id, email: DEFAULT_ADMIN.email, role: DEFAULT_ADMIN.role },
+      user: {
+        id: matchedUser.id,
+        email: matchedUser.email,
+        role: matchedUser.role,
+        name: matchedUser.name,
+      },
     };
   }
 
@@ -62,7 +96,7 @@ export function verifyToken(token) {
   return jwt.verify(token, JWT_SECRET);
 }
 
-export function createAdminSession(user) {
+export async function createAdminSession(user) {
   if (!user?.id || !user?.email) {
     throw new Error('Invalid user payload');
   }
@@ -71,30 +105,27 @@ export function createAdminSession(user) {
   // if SQL is enabled, persist session row
   const useSql = Boolean(process.env.DATABASE_URL || process.env.DB_MODE);
   if (useSql) {
-    (async () => {
+    try {
+      await ensureSqlSchema();
+      const client = await getPool().connect();
       try {
-        await ensureSqlSchema();
-        const client = await getPool().connect();
-        try {
-          const id = `sess-${Date.now()}`;
-          const createdAt = new Date().toISOString();
-          const expiresAt = new Date(Date.now() + 8 * 3600 * 1000).toISOString();
-          await client.query(
-            `INSERT INTO admin_sessions (id, token, user_id, created_at, expires_at, revoked) VALUES ($1,$2,$3,$4,$5,$6)`,
-            [id, token, user.id, createdAt, expiresAt, 0],
-          );
-        } finally {
-          client.release();
-        }
-      } catch (err) {
-        // don't crash on session persistence error
-        console.warn('Failed to persist admin session:', err.message);
+        const id = `sess-${Date.now()}`;
+        const createdAt = new Date().toISOString();
+        const expiresAt = new Date(Date.now() + 8 * 3600 * 1000).toISOString();
+        await client.query(
+          `INSERT INTO admin_sessions (id, token, user_id, created_at, expires_at, revoked) VALUES ($1,$2,$3,$4,$5,$6)`,
+          [id, token, user.id, createdAt, expiresAt, 0],
+        );
+      } finally {
+        client.release();
       }
-    })();
+    } catch (err) {
+      console.warn('Failed to persist admin session:', err.message);
+    }
   }
 
   return {
     token,
-    user: { id: user.id, email: user.email, role: user.role },
+    user: { id: user.id, email: user.email, role: user.role, name: user.name || user.email },
   };
 }

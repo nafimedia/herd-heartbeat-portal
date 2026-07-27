@@ -45,6 +45,7 @@ function normalizeAnimalRecord(record = {}) {
     ciriCiri: record.ciriCiri ?? record.ciri_ciri ?? '',
     namaPemilik: record.namaPemilik ?? record.nama_pemilik ?? '',
     umurPemilik: record.umurPemilik ?? record.umur_pemilik ?? '',
+    statusKepemilikan: record.statusKepemilikan ?? record.status_kepemilikan ?? 'Kepemilikan sendiri',
     tinggiBadan: record.tinggiBadan ?? record.tinggi_badan ?? '',
     panjangBadan: record.panjangBadan ?? record.panjang_badan ?? '',
     lebarDada: record.lebarDada ?? record.lebar_dada ?? '',
@@ -136,7 +137,7 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const session = createAdminSession(authResult.user);
+    const session = await createAdminSession(authResult.user);
     return res.status(200).json(session);
   } catch (error) {
     console.error(error);
@@ -301,7 +302,7 @@ app.post('/api/animals', async (req, res) => {
     if (mode === 'sql') {
       const created = await insertIntoSql(
         'animals',
-        ['id', 'tag', 'name', 'jenis', 'ras', 'jenis_kelamin', 'umur', 'berat', 'kandang', 'status', 'tanggal_masuk', 'umur_kambing', 'ciri_ciri', 'nama_pemilik', 'umur_pemilik', 'tinggi_badan', 'panjang_badan', 'lebar_dada', 'kondisi', 'nafsu_makan', 'feses', 'riwayat_singkat', 'catatan', 'foto_kambing'],
+        ['id', 'tag', 'name', 'jenis', 'ras', 'jenis_kelamin', 'umur', 'berat', 'kandang', 'status', 'tanggal_masuk', 'umur_kambing', 'ciri_ciri', 'nama_pemilik', 'umur_pemilik', 'status_kepemilikan', 'tinggi_badan', 'panjang_badan', 'lebar_dada', 'kondisi', 'nafsu_makan', 'feses', 'riwayat_singkat', 'catatan', 'foto_kambing'],
         [
           payload.id || `animal-${Date.now()}`,
           payload.tag || 'AN-000',
@@ -318,6 +319,7 @@ app.post('/api/animals', async (req, res) => {
           payload.ciriCiri || '',
           payload.namaPemilik || '',
           payload.umurPemilik || '',
+          payload.statusKepemilikan || 'Kepemilikan sendiri',
           payload.tinggiBadan || '',
           payload.panjangBadan || '',
           payload.lebarDada || '',
@@ -329,7 +331,7 @@ app.post('/api/animals', async (req, res) => {
           payload.fotoKambing || '',
         ],
       );
-      return res.status(201).json(created);
+      return res.status(201).json(normalizeAnimalRecord(created));
     }
 
     return res.status(201).json(normalizeAnimalRecord(await addAnimal(payload)));
@@ -376,6 +378,7 @@ app.patch('/api/animals/:id', async (req, res) => {
         ciri_ciri: body.ciriCiri ?? current.ciri_ciri ?? current.ciriCiri,
         nama_pemilik: body.namaPemilik ?? current.nama_pemilik ?? current.namaPemilik,
         umur_pemilik: body.umurPemilik ?? current.umur_pemilik ?? current.umurPemilik,
+        status_kepemilikan: body.statusKepemilikan ?? current.status_kepemilikan ?? current.statusKepemilikan ?? 'Kepemilikan sendiri',
         tinggi_badan: body.tinggiBadan ?? current.tinggi_badan ?? current.tinggiBadan,
         panjang_badan: body.panjangBadan ?? current.panjang_badan ?? current.panjangBadan,
         lebar_dada: body.lebarDada ?? current.lebar_dada ?? current.lebarDada,
@@ -389,7 +392,7 @@ app.patch('/api/animals/:id', async (req, res) => {
 
       const client = await getPool().connect();
       try {
-        await client.query(`UPDATE animals SET tag = $1, name = $2, jenis = $3, ras = $4, jenis_kelamin = $5, umur = $6, berat = $7, kandang = $8, status = $9, tanggal_masuk = $10, umur_kambing = $11, ciri_ciri = $12, nama_pemilik = $13, umur_pemilik = $14, tinggi_badan = $15, panjang_badan = $16, lebar_dada = $17, kondisi = $18, nafsu_makan = $19, feses = $20, riwayat_singkat = $21, catatan = $22, foto_kambing = $23 WHERE id = $24`, [
+        await client.query(`UPDATE animals SET tag = $1, name = $2, jenis = $3, ras = $4, jenis_kelamin = $5, umur = $6, berat = $7, kandang = $8, status = $9, tanggal_masuk = $10, umur_kambing = $11, ciri_ciri = $12, nama_pemilik = $13, umur_pemilik = $14, status_kepemilikan = $15, tinggi_badan = $16, panjang_badan = $17, lebar_dada = $18, kondisi = $19, nafsu_makan = $20, feses = $21, riwayat_singkat = $22, catatan = $23, foto_kambing = $24 WHERE id = $25`, [
           updated.tag,
           updated.name,
           updated.jenis,
@@ -404,6 +407,7 @@ app.patch('/api/animals/:id', async (req, res) => {
           updated.ciri_ciri,
           updated.nama_pemilik,
           updated.umur_pemilik,
+          updated.status_kepemilikan,
           updated.tinggi_badan,
           updated.panjang_badan,
           updated.lebar_dada,
@@ -590,13 +594,6 @@ app.post('/api/production', async (req, res) => {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
   }
-});
-
-app.use((_, res) => res.status(404).json({ error: 'Route not found' }));
-
-app.use((err, _, res, __) => {
-  console.error(err);
-  res.status(500).json({ error: 'Internal server error' });
 });
 
 export default app;
