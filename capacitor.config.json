@@ -4,6 +4,7 @@
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {
+    "url": "https://simpenak.kancasoftware.com",
     "androidScheme": "https",
     "cleartext": true
   },
