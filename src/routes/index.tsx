@@ -376,9 +376,9 @@ export function LandingPage() {
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
                 <Button asChild className="rounded-xl bg-emerald-500 font-bold text-slate-950 hover:bg-emerald-400 shadow-lg text-xs">
-                  <Link to="/panduan">
-                    <Download className="mr-1.5 h-4 w-4" /> Download APK Android
-                  </Link>
+                  <a href="/downloads/kartaning-v1.0.apk" download="kartaning-v1.0.apk">
+                    <Download className="mr-1.5 h-4 w-4" /> Download APK Android (kartaning-v1.0.apk)
+                  </a>
                 </Button>
                 <Button asChild variant="outline" className="rounded-xl border-white/20 bg-white/5 text-white hover:bg-white/10 text-xs">
                   <Link to="/panduan">

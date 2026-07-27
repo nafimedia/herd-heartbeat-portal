@@ -99,7 +99,7 @@ function PanduanPage() {
               </div>
               <ol className="space-y-2.5 text-sm text-muted-foreground list-decimal list-inside pl-2">
                 <li>
-                  <strong className="text-foreground">Download APK Android:</strong> Buka halaman depan aplikasi, lalu klik tombol <span className="text-emerald-600 font-bold">"Download APK Android"</span> untuk mengunduh installer <code className="bg-muted px-1.5 py-0.5 rounded text-xs">kartaning-v1.0.apk</code>.
+                  <strong className="text-foreground">Download APK Android:</strong> Buka halaman depan aplikasi atau klik tombol di bawah untuk mengunduh installer <code className="bg-muted px-1.5 py-0.5 rounded text-xs">kartaning-v1.0.apk</code>.
                 </li>
                 <li>
                   <strong className="text-foreground">Install di HP:</strong> Buka file installer di HP Android Anda dan setujui izin penginstalan aplikasi dari sumber ini.
@@ -111,6 +111,13 @@ function PanduanPage() {
                   <strong className="text-foreground">Penggunaan Offline di Kandang:</strong> Aplikasi siap dibuka tanpa koneksi internet di area kandang. Data yang diisi akan tersimpan di memori HP dan otomatis terunggah saat HP terhubung internet kembali.
                 </li>
               </ol>
+              <div className="pt-2">
+                <Button asChild className="gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs">
+                  <a href="/downloads/kartaning-v1.0.apk" download="kartaning-v1.0.apk">
+                    <Download className="h-4 w-4" /> Download APK Android (kartaning-v1.0.apk)
+                  </a>
+                </Button>
+              </div>
             </div>
 
             {/* Topik 2: Cetak Tag & Scan QR */}

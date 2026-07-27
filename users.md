@@ -1,6 +1,15 @@
-# 🔐 Dokumentasi Akun & Akses Pengguna KARTANING
+# 🔐 Dokumentasi Akun, Kredensial & Download APK KARTANING
 
-Dokumen ini berisi daftar akun pengguna default dan kredensial awal untuk aplikasi **KARTANING (Sistem Pendataan Peternakan Mindajaya Farm x PKM UNU Purwokerto 2026)**.
+Dokumen ini berisi daftar akun pengguna default, kredensial awal, dan tautan unduhan APK Android resmi untuk aplikasi **KARTANING (Sistem Pendataan Peternakan Mindajaya Farm x PKM UNU Purwokerto 2026)**.
+
+---
+
+## 📱 Tautan Download Aplikasi Android (.APK)
+
+- **Direct Download Link**: [/downloads/kartaning-v1.0.apk](file:///c:/Users/user/Documents/laragon/www/farm/public/downloads/kartaning-v1.0.apk)
+- **Nama File**: `kartaning-v1.0.apk`
+- **Versi Aplikasi**: v1.0 Production
+- **Petunjuk Install**: Unduh file APK di smartphone Android, buka file `.apk`, dan pilih **Install**. (Jika muncul peringatan dari sumber tidak dikenal, pilih *Izinkan dari Sumber Ini*).
 
 ---
 
@@ -20,7 +29,7 @@ Dokumen ini berisi daftar akun pengguna default dan kredensial awal untuk aplika
 > [!IMPORTANT]
 > 1. **Ubah Password Default**: Demi keamanan data peternakan di lingkungan produksi, disarankan untuk mengubah kata sandi default pengguna setelah login pertama kali.
 > 2. **Manajemen Akun**: Administrator dapat menambah pengguna baru, mereset password, atau menonaktifkan akun melalui menu **`Manajemen User`** (`/users`) di sidebar aplikasi.
-> 3. **Penyimpanan Password**: Kata sandi disimpan menggunakan enkripsi hashing aman pada database lokal `data/farm.db.json` atau database MySQL Laragon (`users` / `admin_users`).
+> 3. **Penyimpanan Password**: Kata sandi disimpan menggunakan enkripsi hashing aman pada database lokal `data/farm.db.json` atau database MySQL Laragon.
 
 ---
 
