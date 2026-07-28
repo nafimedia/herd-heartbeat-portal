@@ -122,7 +122,7 @@ export async function ensureSqlSchema() {
         ['feses', "VARCHAR(255) DEFAULT 'Normal'"],
         ['riwayat_singkat', 'TEXT'],
         ['catatan', 'TEXT'],
-        ['foto_kambing', 'TEXT'],
+        ['foto_kambing', 'LONGTEXT'],
       ];
       for (const [colName, colDef] of extraColumns) {
         const { rows: columnRows } = await client.query(
@@ -135,6 +135,8 @@ export async function ensureSqlSchema() {
         );
         if (Number(columnRows[0]?.count || 0) === 0) {
           await client.query(`ALTER TABLE animals ADD COLUMN ${colName} ${colDef}`);
+        } else if (colName === 'foto_kambing') {
+          await client.query(`ALTER TABLE animals MODIFY COLUMN foto_kambing LONGTEXT`);
         }
       }
 

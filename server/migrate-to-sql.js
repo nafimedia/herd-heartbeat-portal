@@ -45,19 +45,59 @@ async function migrate() {
 
     // animals
     for (const a of snapshot.animals || []) {
+      const params = [
+        a.id,
+        a.tag || '',
+        a.name || '',
+        a.jenis || 'Kambing',
+        a.ras || 'Lokal',
+        a.jenisKelamin || a.jenis_kelamin || 'Jantan',
+        a.umur || 0,
+        a.berat || 0,
+        a.kandang || '',
+        a.status || 'Sehat',
+        a.tanggalMasuk || a.tanggal_masuk || '',
+        a.umurKambing || a.umur_kambing || '',
+        a.ciriCiri || a.ciri_ciri || '',
+        a.namaPemilik || a.nama_pemilik || '',
+        a.umurPemilik || a.umur_pemilik || '',
+        a.statusKepemilikan || a.status_kepemilikan || 'Kepemilikan sendiri',
+        a.tinggiBadan || a.tinggi_badan || '',
+        a.panjangBadan || a.panjang_badan || '',
+        a.lebarDada || a.lebar_dada || '',
+        a.kondisi || 'Sehat',
+        a.nafsuMakan || a.nafsu_makan || 'Baik',
+        a.feses || 'Normal',
+        a.riwayatSingkat || a.riwayat_singkat || '',
+        a.catatan || '',
+        a.fotoKambing || a.foto_kambing || '',
+      ];
+
       if (mysqlMode) {
         await client.query(
-          `INSERT INTO animals (id, tag, name, jenis, ras, jenis_kelamin, umur, berat, kandang, status, tanggal_masuk)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-           ON DUPLICATE KEY UPDATE id=id;`,
-          [a.id, a.tag, a.name, a.jenis, a.ras, a.jenisKelamin || a.jenis_kelamin || '', a.umur || 0, a.berat || 0, a.kandang || '', a.status || '', a.tanggalMasuk || a.tanggal_masuk || '']
+          `INSERT INTO animals (
+            id, tag, name, jenis, ras, jenis_kelamin, umur, berat, kandang, status, tanggal_masuk,
+            umur_kambing, ciri_ciri, nama_pemilik, umur_pemilik, status_kepemilikan,
+            tinggi_badan, panjang_badan, lebar_dada, kondisi, nafsu_makan, feses, riwayat_singkat, catatan, foto_kambing
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)
+          ON DUPLICATE KEY UPDATE
+            tag=VALUES(tag), name=VALUES(name), jenis=VALUES(jenis), ras=VALUES(ras), jenis_kelamin=VALUES(jenis_kelamin),
+            umur=VALUES(umur), berat=VALUES(berat), kandang=VALUES(kandang), status=VALUES(status),
+            nama_pemilik=VALUES(nama_pemilik), riwayat_singkat=VALUES(riwayat_singkat), catatan=VALUES(catatan);`,
+          params
         );
       } else {
         await client.query(
-          `INSERT INTO animals (id, tag, name, jenis, ras, jenis_kelamin, umur, berat, kandang, status, tanggal_masuk)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-           ON CONFLICT (id) DO NOTHING;`,
-          [a.id, a.tag, a.name, a.jenis, a.ras, a.jenisKelamin || a.jenis_kelamin || '', a.umur || 0, a.berat || 0, a.kandang || '', a.status || '', a.tanggalMasuk || a.tanggal_masuk || '']
+          `INSERT INTO animals (
+            id, tag, name, jenis, ras, jenis_kelamin, umur, berat, kandang, status, tanggal_masuk,
+            umur_kambing, ciri_ciri, nama_pemilik, umur_pemilik, status_kepemilikan,
+            tinggi_badan, panjang_badan, lebar_dada, kondisi, nafsu_makan, feses, riwayat_singkat, catatan, foto_kambing
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)
+          ON CONFLICT (id) DO UPDATE SET
+            tag=EXCLUDED.tag, name=EXCLUDED.name, jenis=EXCLUDED.jenis, ras=EXCLUDED.ras, jenis_kelamin=EXCLUDED.jenis_kelamin,
+            umur=EXCLUDED.umur, berat=EXCLUDED.berat, kandang=EXCLUDED.kandang, status=EXCLUDED.status,
+            nama_pemilik=EXCLUDED.nama_pemilik, riwayat_singkat=EXCLUDED.riwayat_singkat, catatan=EXCLUDED.catatan;`,
+          params
         );
       }
     }

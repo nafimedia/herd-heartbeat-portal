@@ -17,6 +17,8 @@ import {
   Bird,
   Egg,
   Sprout,
+  ShieldCheck,
+  TrendingDown,
 } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import {
@@ -292,12 +294,137 @@ function DashboardPage() {
       }
     >
       {/* Top Metric Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Total Populasi" value={loading ? "—" : `${totalPopulasi}`} hint="Ekor tercatat aktif" delta={4.2} icon={Beef} tone="primary" />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <StatCard label="Total Populasi" value={loading ? "—" : `${totalPopulasi}`} hint="Ekor posyandu aktif" delta={4.2} icon={Beef} tone="primary" />
+        <StatCard label="Ternak Sehat" value={loading ? "—" : `${ternakSehat}`} hint="100% Bebas Penyakit" delta={13.3} icon={HeartPulse} tone="success" />
+        <StatCard label="Tingkat Kematian" value="0%" hint="Sesudah Posyandu (0 Ekor)" delta={-100} icon={ShieldCheck} tone="success" />
         <StatCard label="Produksi Susu" value={loading ? "—" : totalProduksi} hint="Hari ini" delta={2.8} icon={Milk} tone="accent" />
-        <StatCard label="Ternak Sehat" value={loading ? "—" : `${ternakSehat}`} hint="81% dari populasi" delta={1.4} icon={HeartPulse} tone="success" />
         <StatCard label="Stok Pakan Kritis" value={loading ? "—" : `${stokKritis}`} hint="Item di bawah minimum" delta={-12} icon={TriangleAlert} tone="warning" />
       </div>
+
+      {/* POSYANDU HEALTH & MORTALITY EVALUATION CARD */}
+      <Card className="mt-6 border-emerald-500/30 bg-gradient-to-br from-emerald-950/20 via-card to-background shadow-md overflow-hidden">
+        <CardHeader className="border-b border-border/50 pb-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <CardTitle className="text-xl font-bold tracking-tight">Evaluasi Kesehatan & Tingkat Kematian Ternak</CardTitle>
+                  <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
+                    Posyandu PKM UNU 2026
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Perbandingan performa kesehatan, kesakitan, dan tingkat kematian ternak Sebelum vs Sesudah program Posyandu.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg text-xs font-bold text-emerald-600 dark:text-emerald-400 w-fit">
+              <TrendingDown className="h-4 w-4 text-emerald-500" />
+              <span>Penurunan Kematian: 100%</span>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="pt-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* SEBELUM POSYANDU */}
+            <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-4 sm:p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-rose-500/20 pb-3">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="border-rose-500/40 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold text-xs">
+                    Sebelum Posyandu
+                  </Badge>
+                  <span className="text-xs text-muted-foreground font-medium">Kondisi Awal</span>
+                </div>
+                <Badge variant="secondary" className="bg-rose-500/20 text-rose-700 dark:text-rose-300 font-mono text-xs">
+                  Resiko Tinggi
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-lg bg-background/80 p-2.5 border border-rose-500/10 shadow-xs">
+                  <p className="text-[11px] text-muted-foreground font-medium">Ternak Sakit</p>
+                  <p className="text-lg sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-1">10 <span className="text-xs font-normal">ekor</span></p>
+                  <p className="text-[10px] text-rose-500 font-semibold">(13.3%)</p>
+                </div>
+                <div className="rounded-lg bg-background/80 p-2.5 border border-rose-500/10 shadow-xs">
+                  <p className="text-[11px] text-muted-foreground font-medium">Ternak Sehat</p>
+                  <p className="text-lg sm:text-2xl font-black text-slate-700 dark:text-slate-200 mt-1">65 <span className="text-xs font-normal">ekor</span></p>
+                  <p className="text-[10px] text-muted-foreground font-semibold">(86.7%)</p>
+                </div>
+                <div className="rounded-lg bg-background/80 p-2.5 border border-rose-500/10 shadow-xs">
+                  <p className="text-[11px] text-muted-foreground font-medium">Kematian Awal</p>
+                  <p className="text-sm sm:text-base font-black text-rose-600 dark:text-rose-400 mt-1">1–5 <span className="text-[10px] font-normal">ekor/ptk/thn</span></p>
+                  <p className="text-[10px] text-rose-500 font-semibold">Resiko Tinggi</p>
+                </div>
+              </div>
+
+              <div className="space-y-1.5 text-xs text-muted-foreground bg-background/50 p-3 rounded-lg border border-rose-500/10">
+                <div className="flex items-center justify-between font-medium text-foreground">
+                  <span>Persentase Ternak Sehat Awal:</span>
+                  <span className="font-bold text-rose-600 dark:text-rose-400">86.7%</span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                  <div className="h-full bg-rose-500 rounded-full" style={{ width: "86.7%" }} />
+                </div>
+                <p className="text-[11px] text-muted-foreground pt-1">
+                  ⚠️ Catatan awal: Terdapat kasus Cacingan & Pink eye serta angka kematian tahunan 1-5 ekor per peternak.
+                </p>
+              </div>
+            </div>
+
+            {/* SESUDAH POSYANDU */}
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 sm:p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
+                    Sesudah Posyandu
+                  </Badge>
+                  <span className="text-xs text-muted-foreground font-medium">Intervensi Posyandu</span>
+                </div>
+                <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-mono text-xs">
+                  🟢 100% Sehat & Prima
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-lg bg-background/80 p-2.5 border border-emerald-500/10 shadow-xs">
+                  <p className="text-[11px] text-muted-foreground font-medium">Ternak Sakit</p>
+                  <p className="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">0 <span className="text-xs font-normal">ekor</span></p>
+                  <p className="text-[10px] text-emerald-500 font-semibold">(0%)</p>
+                </div>
+                <div className="rounded-lg bg-background/80 p-2.5 border border-emerald-500/10 shadow-xs">
+                  <p className="text-[11px] text-muted-foreground font-medium">Ternak Sehat</p>
+                  <p className="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">75 <span className="text-xs font-normal">ekor</span></p>
+                  <p className="text-[10px] text-emerald-500 font-semibold">(100%)</p>
+                </div>
+                <div className="rounded-lg bg-background/80 p-2.5 border border-emerald-500/10 shadow-xs">
+                  <p className="text-[11px] text-muted-foreground font-medium">Tingkat Kematian</p>
+                  <p className="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">0 <span className="text-xs font-normal">ekor</span></p>
+                  <p className="text-[10px] text-emerald-500 font-semibold">0% (Bebas Kematian)</p>
+                </div>
+              </div>
+
+              <div className="space-y-1.5 text-xs text-muted-foreground bg-background/50 p-3 rounded-lg border border-emerald-500/10">
+                <div className="flex items-center justify-between font-medium text-foreground">
+                  <span>Persentase Ternak Sehat Sesudah Posyandu:</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">100%</span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: "100%" }} />
+                </div>
+                <p className="text-[11px] text-muted-foreground pt-1">
+                  ✨ Hasil intervensi: 100% ternak telah mendapatkan Vitamin, Mineral, Deworming & Vaksinasi PMK.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* FITUR PENGELOMPOKAN TERNAK */}
       <Card className="mt-6 border-border/80 bg-gradient-to-br from-card to-background shadow-sm">
